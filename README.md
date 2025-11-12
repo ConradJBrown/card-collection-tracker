@@ -1,18 +1,5 @@
 # card-collection-tracker
 
-* project overview
-* tech stack
-* setup instructions
-* development workflow
-* roadmap checklist
-* future features
-* contribution & license info
-
----
-
-````markdown
-# 🧩 Yu-Gi-Oh! Collection Tracker
-
 A personal web app for tracking your Yu-Gi-Oh! TCG collection.  
 Built with **React + TypeScript + Vite**, this project allows you to search cards from the [YGOPRODeck API](https://ygoprodeck.com/api-guide/), add them to your collection, and persist them locally.
 
@@ -220,5 +207,3 @@ Software Developer & TCG Enthusiast
 ---
 
 > *“In every duel, the cards tell a story — this app just helps you keep track of it.”*
-
-```
