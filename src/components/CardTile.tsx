@@ -1,5 +1,6 @@
 import { CardResult } from '../types';
-import { useCollectionStore } from '../store/collectionStore';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db, addOrIncrementCard } from '../services/db';
 
 interface CardTileProps {
   card: CardResult;
@@ -18,10 +19,22 @@ const GAME_LABEL: Record<string, string> = {
 };
 
 export default function CardTile({ card }: CardTileProps) {
-  const addCard = useCollectionStore((s) => s.addCard);
-  const collection = useCollectionStore((s) => s.collection);
   const key = `${card.game}-${card.id}`;
-  const inCollection = Boolean(collection[key]);
+  const inCollection = useLiveQuery(() => db.collection.get(key).then(Boolean), [key], false);
+
+  const handleAdd = () => {
+    addOrIncrementCard({
+      id: key,
+      cardId: card.id,
+      game: card.game,
+      name: card.name,
+      imageUrl: card.imageUrl,
+      type: card.type,
+      set: card.set,
+      rarity: card.rarity,
+      description: card.description,
+    });
+  };
 
   return (
     <div className="bg-slate-800 rounded-lg shadow-md overflow-hidden flex flex-col hover:ring-2 hover:ring-slate-600 transition-all duration-150">
@@ -60,7 +73,7 @@ export default function CardTile({ card }: CardTileProps) {
                 ✓ In Collection
               </span>
               <button
-                onClick={() => addCard(card)}
+                onClick={handleAdd}
                 className="text-xs text-slate-400 hover:text-slate-200 underline"
               >
                 +1
@@ -68,7 +81,7 @@ export default function CardTile({ card }: CardTileProps) {
             </div>
           ) : (
             <button
-              onClick={() => addCard(card)}
+              onClick={handleAdd}
               className="w-full text-sm font-medium bg-slate-700 hover:bg-slate-600 text-slate-100 py-1.5 px-3 rounded-md transition-colors duration-150"
             >
               Add to Collection

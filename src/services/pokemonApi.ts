@@ -6,6 +6,8 @@ interface PokemonCard {
   images?: { large?: string; small?: string };
   supertype?: string;
   flavorText?: string;
+  set?: { name?: string };
+  rarity?: string;
 }
 
 interface PokemonResponse {
@@ -26,6 +28,8 @@ export async function searchPokemon(name: string): Promise<CardResult[]> {
       game: 'pokemon',
       type: card.supertype,
       description: card.flavorText ?? '',
+      set: card.set?.name,
+      rarity: card.rarity,
     }));
   } catch {
     return [];

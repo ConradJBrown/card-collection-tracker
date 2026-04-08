@@ -1,8 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GameType } from './types';
 import Layout from './components/Layout';
 import CardSearch from './components/CardSearch';
 import CollectionView from './components/CollectionView';
+import { db } from './services/db';
+import localforage from 'localforage';
+import type { CollectionEntry } from './types';
 
 type ActiveTab = 'search' | 'collection';
 
@@ -24,6 +27,31 @@ const TAB_STYLES: Record<GameType, { active: string; inactive: string }> = {
 export default function App() {
   const [activeGame, setActiveGame] = useState<GameType>('yugioh');
   const [activeTab, setActiveTab] = useState<ActiveTab>('search');
+
+  // One-time migration: move old localforage blob to Dexie
+  useEffect(() => {
+    const migrate = async () => {
+      const old = await localforage.getItem<Record<string, CollectionEntry>>('collection');
+      if (!old) return;
+      const rows = Object.entries(old).map(([id, entry]) => ({
+        id,
+        cardId: entry.card.id,
+        game: entry.card.game,
+        name: entry.card.name,
+        imageUrl: entry.card.imageUrl,
+        type: entry.card.type,
+        set: entry.card.set,
+        rarity: entry.card.rarity,
+        description: entry.card.description,
+        quantity: entry.quantity,
+        condition: entry.condition,
+        addedAt: entry.addedAt,
+      }));
+      await db.collection.bulkPut(rows);
+      await localforage.removeItem('collection');
+    };
+    migrate();
+  }, []);
 
   const tabs = TAB_STYLES[activeGame];
 

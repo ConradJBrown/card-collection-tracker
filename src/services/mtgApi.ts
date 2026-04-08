@@ -11,6 +11,8 @@ interface ScryfallCard {
   card_faces?: { image_uris?: ScryfallImageUris }[];
   type_line?: string;
   oracle_text?: string;
+  set_name?: string;
+  rarity?: string;
 }
 
 interface ScryfallResponse {
@@ -34,6 +36,8 @@ export async function searchMtg(name: string): Promise<CardResult[]> {
       game: 'mtg',
       type: card.type_line,
       description: card.oracle_text,
+      set: card.set_name,
+      rarity: card.rarity,
     }));
   } catch {
     return [];

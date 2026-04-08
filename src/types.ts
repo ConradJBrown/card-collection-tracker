@@ -6,6 +6,8 @@ export interface CardResult {
   imageUrl: string;
   game: GameType;
   type?: string;
+  set?: string;
+  rarity?: string;
   description?: string;
 }
 

@@ -6,6 +6,7 @@ interface YgoCard {
   type: string;
   desc: string;
   card_images: { image_url: string }[];
+  card_sets?: { set_name: string; set_rarity?: string }[];
 }
 
 interface YgoResponse {
@@ -26,6 +27,8 @@ export async function searchYugioh(name: string): Promise<CardResult[]> {
       game: 'yugioh',
       type: card.type,
       description: card.desc,
+      set: card.card_sets?.[0]?.set_name,
+      rarity: card.card_sets?.[0]?.set_rarity,
     }));
   } catch {
     return [];

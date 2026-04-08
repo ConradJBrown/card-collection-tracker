@@ -1,101 +1,40 @@
 import { create } from 'zustand';
-import localforage from 'localforage';
-import { CardResult, CollectionEntry, GameType } from '../types';
+import { DbEntry } from '../services/db';
 
-const STORAGE_KEY = 'collection';
+export type SortBy = 'name' | 'quantity' | 'addedAt';
 
-interface CollectionStore {
-  collection: Record<string, CollectionEntry>;
-  addCard: (card: CardResult) => void;
-  removeCard: (key: string) => void;
-  incrementQty: (key: string) => void;
-  decrementQty: (key: string) => void;
-  setCondition: (key: string, condition: CollectionEntry['condition']) => void;
-  getByGame: (game: GameType) => CollectionEntry[];
+interface CollectionUIStore {
+  searchTerm: string;
+  sortBy: SortBy;
+  sortDir: 'asc' | 'desc';
+  filterType: string;
+  filterSet: string;
+  filterRarity: string;
+  setSearchTerm: (v: string) => void;
+  setSortBy: (v: SortBy) => void;
+  setSortDir: (v: 'asc' | 'desc') => void;
+  setFilterType: (v: string) => void;
+  setFilterSet: (v: string) => void;
+  setFilterRarity: (v: string) => void;
+  resetFilters: () => void;
 }
 
-const saveToStorage = (collection: Record<string, CollectionEntry>) => {
-  localforage.setItem(STORAGE_KEY, collection).catch(() => {});
-};
+// Re-export condition type from DbEntry so consumers don't need to import db directly
+export type CardCondition = DbEntry['condition'];
 
-const loadInitial = async (set: (partial: Partial<CollectionStore>) => void) => {
-  const saved = await localforage.getItem<Record<string, CollectionEntry>>(STORAGE_KEY);
-  if (saved) set({ collection: saved });
-};
+export const useCollectionStore = create<CollectionUIStore>((set) => ({
+  searchTerm: '',
+  sortBy: 'addedAt',
+  sortDir: 'desc',
+  filterType: '',
+  filterSet: '',
+  filterRarity: '',
 
-export const useCollectionStore = create<CollectionStore>((set, get) => {
-  loadInitial(set);
-
-  return {
-    collection: {},
-
-    addCard: (card) => {
-      const key = `${card.game}-${card.id}`;
-      const existing = get().collection[key];
-      const updated: Record<string, CollectionEntry> = {
-        ...get().collection,
-        [key]: existing
-          ? { ...existing, quantity: existing.quantity + 1 }
-          : {
-              card,
-              quantity: 1,
-              condition: 'Near Mint',
-              addedAt: new Date().toISOString(),
-            },
-      };
-      set({ collection: updated });
-      saveToStorage(updated);
-    },
-
-    removeCard: (key) => {
-      const updated = { ...get().collection };
-      delete updated[key];
-      set({ collection: updated });
-      saveToStorage(updated);
-    },
-
-    incrementQty: (key) => {
-      const entry = get().collection[key];
-      if (!entry) return;
-      const updated = {
-        ...get().collection,
-        [key]: { ...entry, quantity: entry.quantity + 1 },
-      };
-      set({ collection: updated });
-      saveToStorage(updated);
-    },
-
-    decrementQty: (key) => {
-      const entry = get().collection[key];
-      if (!entry) return;
-      if (entry.quantity <= 1) {
-        const updated = { ...get().collection };
-        delete updated[key];
-        set({ collection: updated });
-        saveToStorage(updated);
-      } else {
-        const updated = {
-          ...get().collection,
-          [key]: { ...entry, quantity: entry.quantity - 1 },
-        };
-        set({ collection: updated });
-        saveToStorage(updated);
-      }
-    },
-
-    setCondition: (key, condition) => {
-      const entry = get().collection[key];
-      if (!entry) return;
-      const updated = {
-        ...get().collection,
-        [key]: { ...entry, condition },
-      };
-      set({ collection: updated });
-      saveToStorage(updated);
-    },
-
-    getByGame: (game) => {
-      return Object.values(get().collection).filter((e) => e.card.game === game);
-    },
-  };
-});
+  setSearchTerm: (v) => set({ searchTerm: v }),
+  setSortBy: (v) => set({ sortBy: v }),
+  setSortDir: (v) => set({ sortDir: v }),
+  setFilterType: (v) => set({ filterType: v }),
+  setFilterSet: (v) => set({ filterSet: v }),
+  setFilterRarity: (v) => set({ filterRarity: v }),
+  resetFilters: () => set({ searchTerm: '', filterType: '', filterSet: '', filterRarity: '' }),
+}));
