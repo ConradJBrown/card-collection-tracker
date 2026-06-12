@@ -95,13 +95,12 @@ src/
 
 ### ✅ Phase 1 — MVP
 
-* [ ] Project scaffolding (React + TS + Tailwind + Zustand)
-* [ ] Card search using API
-* [ ] Local collection store
-* [ ] Collection view with add/remove
-* [ ] Persistence via IndexedDB
-* [ ] Responsive design polish
-* [ ] Initial deployment (Netlify/Vercel)
+* [x] Project scaffolding (React + TS + Tailwind + Zustand)
+* [x] Card search using API
+* [x] Local collection store
+* [x] Collection view with add/remove
+* [x] Persistence via IndexedDB
+* [x] Responsive design polish
 
 ### 🔜 Phase 2 — Cloud & Accounts
 
