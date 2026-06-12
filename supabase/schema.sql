@@ -8,7 +8,7 @@ $$;
 
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
-  email text not null unique,
+  email text unique,
   display_name text,
   default_role public.app_role not null default 'owner',
   created_at timestamptz not null default timezone('utc', now()),
@@ -23,7 +23,7 @@ set search_path = public
 as $$
 begin
   insert into public.profiles (id, email)
-  values (new.id, coalesce(new.email, ''));
+  values (new.id, new.email);
   return new;
 end;
 $$;

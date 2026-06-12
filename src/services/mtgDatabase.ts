@@ -125,54 +125,59 @@ class MTGDatabase {
   async downloadAndIndex(
     onProgress?: (progress: { loaded: number; total: number; status: string }) => void
   ): Promise<void> {
-    if (onProgress) onProgress({ loaded: 0, total: 100, status: 'Fetching metadata...' });
-    const metaRes = await fetch('https://api.scryfall.com/bulk-data');
-    if (!metaRes.ok) throw new Error('Failed to fetch bulk data metadata');
+    try {
+      if (onProgress) onProgress({ loaded: 0, total: 100, status: 'Fetching metadata...' });
+      const metaRes = await fetch('https://api.scryfall.com/bulk-data');
+      if (!metaRes.ok) throw new Error('Failed to fetch bulk data metadata');
 
-    const bulkData: BulkDataResponse = await metaRes.json();
-    const oracleData = bulkData.data.find((item) => item.type === 'oracle_cards');
-    if (!oracleData) throw new Error('Oracle cards bulk data not found');
+      const bulkData: BulkDataResponse = await metaRes.json();
+      const oracleData = bulkData.data.find((item) => item.type === 'oracle_cards');
+      if (!oracleData) throw new Error('Oracle cards bulk data not found');
 
-    const totalSize = oracleData.size;
-    if (onProgress) onProgress({ loaded: 0, total: totalSize, status: 'Downloading MTG database...' });
+      const totalSize = oracleData.size;
+      if (onProgress) onProgress({ loaded: 0, total: totalSize, status: 'Downloading MTG database...' });
 
-    const downloadRes = await fetch(oracleData.download_uri);
-    if (!downloadRes.ok) throw new Error('Failed to download MTG database');
+      const downloadRes = await fetch(oracleData.download_uri);
+      if (!downloadRes.ok) throw new Error('Failed to download MTG database');
 
-    const buffer = await downloadRes.arrayBuffer();
-    const decompressed = await this.decompressGzip(buffer);
-    const jsonString = new TextDecoder().decode(decompressed);
+      const buffer = await downloadRes.arrayBuffer();
+      const decompressed = await this.decompressGzip(buffer);
+      const jsonString = new TextDecoder().decode(decompressed);
 
-    if (onProgress) onProgress({ loaded: totalSize, total: totalSize, status: 'Processing cards...' });
+      if (onProgress) onProgress({ loaded: totalSize, total: totalSize, status: 'Processing cards...' });
 
-    const cards: ScryfallCard[] = JSON.parse(jsonString);
-    const searchIndex: Record<string, CardResult> = {};
+      const cards: ScryfallCard[] = JSON.parse(jsonString);
+      const searchIndex: Record<string, CardResult> = {};
 
-    cards.forEach((card) => {
-      const key = card.name.toLowerCase();
-      searchIndex[key] = {
-        id: card.id,
-        name: card.name,
-        imageUrl:
-          card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal ?? '',
-        game: 'mtg',
-        type: card.type_line,
-        description: card.oracle_text,
+      cards.forEach((card) => {
+        const key = card.name.toLowerCase();
+        searchIndex[key] = {
+          id: card.id,
+          name: card.name,
+          imageUrl:
+            card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal ?? '',
+          game: 'mtg',
+          type: card.type_line,
+          description: card.oracle_text,
+        };
+      });
+
+      await this.clearDatabase();
+      await this.setSearchIndex(searchIndex);
+
+      const metadata: DatabaseMetadata = {
+        lastUpdated: new Date().toISOString(),
+        version: oracleData.updated_at,
+        cardCount: cards.length,
       };
-    });
+      await this.setMetadata(metadata);
 
-    await this.clearDatabase();
-    await this.setSearchIndex(searchIndex);
-
-    const metadata: DatabaseMetadata = {
-      lastUpdated: new Date().toISOString(),
-      version: oracleData.updated_at,
-      cardCount: cards.length,
-    };
-    await this.setMetadata(metadata);
-
-    if (onProgress) {
-      onProgress({ loaded: totalSize, total: totalSize, status: `Successfully indexed ${cards.length} cards` });
+      if (onProgress) {
+        onProgress({ loaded: totalSize, total: totalSize, status: `Successfully indexed ${cards.length} cards` });
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      throw new Error(`MTG database update failed: ${message}`);
     }
   }
 

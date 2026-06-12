@@ -179,20 +179,32 @@ export default function App() {
 
     configureCollectionSync({
       onUpsert: async (entry) => {
-        setSyncStatus('syncing');
-        setSyncMessage('Syncing changes to the cloud...');
-        await upsertCloudCollectionEntry(userId, entry);
-        setSyncStatus('idle');
-        setSyncMessage('All collection changes are synced.');
-        setLastSyncedAt(new Date().toISOString());
+        try {
+          setSyncStatus('syncing');
+          setSyncMessage('Syncing changes to the cloud...');
+          await upsertCloudCollectionEntry(userId, entry);
+          setSyncStatus('idle');
+          setSyncMessage('All collection changes are synced.');
+          setLastSyncedAt(new Date().toISOString());
+        } catch (error) {
+          setSyncStatus('error');
+          setSyncMessage(getErrorMessage(error));
+          throw error;
+        }
       },
       onDelete: async (entryId) => {
-        setSyncStatus('syncing');
-        setSyncMessage('Syncing changes to the cloud...');
-        await deleteCloudCollectionEntry(userId, entryId);
-        setSyncStatus('idle');
-        setSyncMessage('All collection changes are synced.');
-        setLastSyncedAt(new Date().toISOString());
+        try {
+          setSyncStatus('syncing');
+          setSyncMessage('Syncing changes to the cloud...');
+          await deleteCloudCollectionEntry(userId, entryId);
+          setSyncStatus('idle');
+          setSyncMessage('All collection changes are synced.');
+          setLastSyncedAt(new Date().toISOString());
+        } catch (error) {
+          setSyncStatus('error');
+          setSyncMessage(getErrorMessage(error));
+          throw error;
+        }
       },
       onSyncError: (error) => {
         setSyncStatus('error');
