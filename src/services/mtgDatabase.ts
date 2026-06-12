@@ -31,6 +31,10 @@ interface DatabaseMetadata {
   cardCount: number;
 }
 
+interface DecompressionStreamConstructor {
+  new (format: 'gzip'): TransformStream<Uint8Array, Uint8Array>;
+}
+
 const DB_NAME = 'mtg-cards';
 const STORE_NAME = 'cards';
 const METADATA_KEY = 'metadata';
@@ -121,62 +125,54 @@ class MTGDatabase {
   async downloadAndIndex(
     onProgress?: (progress: { loaded: number; total: number; status: string }) => void
   ): Promise<void> {
-    try {
-      // Fetch bulk data metadata
-      if (onProgress) onProgress({ loaded: 0, total: 100, status: 'Fetching metadata...' });
-      const metaRes = await fetch('https://api.scryfall.com/bulk-data');
-      if (!metaRes.ok) throw new Error('Failed to fetch bulk data metadata');
+    if (onProgress) onProgress({ loaded: 0, total: 100, status: 'Fetching metadata...' });
+    const metaRes = await fetch('https://api.scryfall.com/bulk-data');
+    if (!metaRes.ok) throw new Error('Failed to fetch bulk data metadata');
 
-      const bulkData: BulkDataResponse = await metaRes.json();
-      const oracleData = bulkData.data.find((item) => item.type === 'oracle_cards');
-      if (!oracleData) throw new Error('Oracle cards bulk data not found');
+    const bulkData: BulkDataResponse = await metaRes.json();
+    const oracleData = bulkData.data.find((item) => item.type === 'oracle_cards');
+    if (!oracleData) throw new Error('Oracle cards bulk data not found');
 
-      const totalSize = oracleData.size;
-      if (onProgress) onProgress({ loaded: 0, total: totalSize, status: 'Downloading MTG database...' });
+    const totalSize = oracleData.size;
+    if (onProgress) onProgress({ loaded: 0, total: totalSize, status: 'Downloading MTG database...' });
 
-      // Download the gzipped JSON
-      const downloadRes = await fetch(oracleData.download_uri);
-      if (!downloadRes.ok) throw new Error('Failed to download MTG database');
+    const downloadRes = await fetch(oracleData.download_uri);
+    if (!downloadRes.ok) throw new Error('Failed to download MTG database');
 
-      // Read response as ArrayBuffer and decompress
-      const buffer = await downloadRes.arrayBuffer();
-      const decompressed = await this.decompressGzip(buffer);
-      const jsonString = new TextDecoder().decode(decompressed);
+    const buffer = await downloadRes.arrayBuffer();
+    const decompressed = await this.decompressGzip(buffer);
+    const jsonString = new TextDecoder().decode(decompressed);
 
-      if (onProgress) onProgress({ loaded: totalSize, total: totalSize, status: 'Processing cards...' });
+    if (onProgress) onProgress({ loaded: totalSize, total: totalSize, status: 'Processing cards...' });
 
-      // Parse JSON and build search index
-      const cards: ScryfallCard[] = JSON.parse(jsonString);
-      const searchIndex: Record<string, CardResult> = {};
+    const cards: ScryfallCard[] = JSON.parse(jsonString);
+    const searchIndex: Record<string, CardResult> = {};
 
-      cards.forEach((card) => {
-        const key = card.name.toLowerCase();
-        searchIndex[key] = {
-          id: card.id,
-          name: card.name,
-          imageUrl:
-            card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal ?? '',
-          game: 'mtg',
-          type: card.type_line,
-          description: card.oracle_text,
-        };
-      });
-
-      // Clear old data and save new index
-      await this.clearDatabase();
-      await this.setSearchIndex(searchIndex);
-
-      const metadata: DatabaseMetadata = {
-        lastUpdated: new Date().toISOString(),
-        version: oracleData.updated_at,
-        cardCount: cards.length,
+    cards.forEach((card) => {
+      const key = card.name.toLowerCase();
+      searchIndex[key] = {
+        id: card.id,
+        name: card.name,
+        imageUrl:
+          card.image_uris?.normal ?? card.card_faces?.[0]?.image_uris?.normal ?? '',
+        game: 'mtg',
+        type: card.type_line,
+        description: card.oracle_text,
       };
-      await this.setMetadata(metadata);
+    });
 
-      if (onProgress)
-        onProgress({ loaded: totalSize, total: totalSize, status: `Successfully indexed ${cards.length} cards` });
-    } catch (error) {
-      throw error;
+    await this.clearDatabase();
+    await this.setSearchIndex(searchIndex);
+
+    const metadata: DatabaseMetadata = {
+      lastUpdated: new Date().toISOString(),
+      version: oracleData.updated_at,
+      cardCount: cards.length,
+    };
+    await this.setMetadata(metadata);
+
+    if (onProgress) {
+      onProgress({ loaded: totalSize, total: totalSize, status: `Successfully indexed ${cards.length} cards` });
     }
   }
 
@@ -190,9 +186,9 @@ class MTGDatabase {
         },
       });
 
-      const decompressed = stream.pipeThrough(
-        new (globalThis as any).DecompressionStream('gzip')
-      );
+      const DecompressionStreamCtor =
+        globalThis.DecompressionStream as DecompressionStreamConstructor;
+      const decompressed = stream.pipeThrough(new DecompressionStreamCtor('gzip'));
 
       const reader = decompressed.getReader() as ReadableStreamDefaultReader<Uint8Array>;
       const chunks: Uint8Array[] = [];

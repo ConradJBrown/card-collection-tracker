@@ -3,7 +3,7 @@
 A personal web app for tracking your Yu-Gi-Oh! TCG collection.  
 Built with **React + TypeScript + Vite**, this project allows you to search cards from the [YGOPRODeck API](https://ygoprodeck.com/api-guide/), add them to your collection, and persist them locally.
 
-> ⚡ MVP Focus: Local-only app (no authentication or cloud sync yet).  
+> ⚡ Phase 2 foundation: local-first app with optional Supabase-backed authentication and cloud sync.  
 > Phase 1 goal — Search → Add → View → Remove cards.
 
 ---
@@ -26,9 +26,10 @@ Built with **React + TypeScript + Vite**, this project allows you to search card
 | **Frontend** | React 18 + TypeScript |
 | **Build Tool** | Vite |
 | **State Management** | Zustand |
-| **Local Storage** | Localforage (IndexedDB wrapper) |
+| **Local Storage** | Dexie + IndexedDB |
 | **Styling** | TailwindCSS |
 | **API** | YGOPRODeck REST API |
+| **Auth / Sync** | Supabase Auth + Postgres (optional) |
 | **Package Manager** | npm or pnpm |
 
 ---
@@ -47,7 +48,31 @@ cd yugioh-collection-tracker
 npm install
 ```
 
-### 3️⃣ Run the Development Server
+### 3️⃣ Optional: Configure Supabase for Phase 2
+
+Copy the example environment file and fill in your Supabase values:
+
+```bash
+cp .env.example .env
+```
+
+Required variables:
+
+```bash
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_ANON_KEY=...
+```
+
+Optional variables:
+
+```bash
+VITE_DEPLOYMENT_MODE=hosted # or self-hosted
+VITE_SUPABASE_REDIRECT_URL=http://localhost:5173
+```
+
+Apply the SQL in `/supabase/schema.sql` to your Supabase project before signing in.
+
+### 4️⃣ Run the Development Server
 
 ```bash
 npm run dev
@@ -66,8 +91,11 @@ src/
 │  ├─ CollectionList.tsx    # Displays saved cards
 │  └─ (more UI components)
 ├─ store/
-│  └─ collectionStore.ts    # Zustand store with persistence
+│  └─ collectionStore.ts    # Zustand store for collection filters/sorting
 ├─ services/
+│  ├─ authProvider.ts       # Auth abstraction with Supabase implementation
+│  ├─ cloudCollection.ts    # Cloud collection sync service
+│  ├─ db.ts                 # Local Dexie collection cache
 │  └─ yugiohApi.ts          # API client for YGOPRODeck
 ├─ types.ts                 # Shared interfaces
 └─ App.tsx                  # Root app + navigation
@@ -104,8 +132,10 @@ src/
 
 ### 🔜 Phase 2 — Cloud & Accounts
 
-* [ ] Add Supabase or Firebase for sync and authentication
-* [ ] Support multiple devices per user
+* [x] Add a Supabase-ready authentication and sync layer
+* [x] Support multiple devices per user through cloud sync
+* [x] Preserve guest collections for post-login import
+* [ ] Add organization/admin workflows for company installs
 * [ ] Import/export JSON data
 
 ### 🔮 Future Enhancements
@@ -146,7 +176,20 @@ src/
 | `npm run dev`     | Run development server     |
 | `npm run build`   | Build for production       |
 | `npm run preview` | Preview built app locally  |
-| `npm run lint`    | Lint code (optional setup) |
+| `npm run lint`    | Lint code (requires ESLint config) |
+
+---
+
+## 🔐 Phase 2 Authentication Notes
+
+- Without Supabase env vars, the app stays in **local-only mode**.
+- With Supabase configured, users can:
+  - create an account
+  - sign in and sign out
+  - request a password reset
+  - sync their collection across devices
+  - import their pre-auth local collection into their account
+- The UI talks to an auth abstraction so a future self-hosted company deployment can swap identity providers with limited app-side changes.
 
 ---
 
