@@ -129,7 +129,7 @@ export default function App() {
       } catch (error) {
         if (!isMounted) return;
         setSyncStatus('error');
-        setSyncMessage(getErrorMessage(error));
+        setSyncMessage(`Initialization failed: ${getErrorMessage(error)}`);
       }
     };
 

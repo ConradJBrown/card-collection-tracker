@@ -42,7 +42,7 @@ export function configureCollectionSync(handlers: CollectionSyncHandlers) {
 }
 
 function toError(error: unknown) {
-  return error instanceof Error ? error : new Error('Collection sync failed.');
+  return error instanceof Error ? error : new Error(`Collection sync failed: ${String(error)}`);
 }
 
 async function syncEntry(id: string) {

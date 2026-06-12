@@ -26,9 +26,9 @@ function requireSupabase() {
   return supabase;
 }
 
-function throwIfError(error: { message: string } | null) {
+function throwIfError(error: { message: string } | null, action: string) {
   if (error) {
-    throw new Error(error.message);
+    throw new Error(`${action}: ${error.message}`);
   }
 }
 
@@ -38,7 +38,7 @@ export const authProvider: AuthProvider = {
     if (!supabase) return null;
 
     const { data, error } = await supabase.auth.getSession();
-    throwIfError(error);
+    throwIfError(error, 'Failed to restore session');
     return data.session;
   },
   onAuthStateChange(callback) {
@@ -57,7 +57,7 @@ export const authProvider: AuthProvider = {
   async signIn(email, password) {
     const client = requireSupabase();
     const { error } = await client.auth.signInWithPassword({ email, password });
-    throwIfError(error);
+    throwIfError(error, 'Sign in failed');
   },
   async signUp(email, password) {
     const client = requireSupabase();
@@ -68,23 +68,23 @@ export const authProvider: AuthProvider = {
         emailRedirectTo: appConfig.supabaseRedirectUrl,
       },
     });
-    throwIfError(error);
+    throwIfError(error, 'Sign up failed');
   },
   async signOut() {
     const client = requireSupabase();
     const { error } = await client.auth.signOut();
-    throwIfError(error);
+    throwIfError(error, 'Sign out failed');
   },
   async resetPassword(email) {
     const client = requireSupabase();
     const { error } = await client.auth.resetPasswordForEmail(email, {
       redirectTo: appConfig.supabaseRedirectUrl,
     });
-    throwIfError(error);
+    throwIfError(error, 'Password reset failed');
   },
   async updatePassword(password) {
     const client = requireSupabase();
     const { error } = await client.auth.updateUser({ password });
-    throwIfError(error);
+    throwIfError(error, 'Password update failed');
   },
 };

@@ -31,6 +31,8 @@ interface DatabaseMetadata {
   cardCount: number;
 }
 
+// Provides a local type for the browser DecompressionStream constructor when
+// the active TypeScript DOM lib configuration does not expose it directly.
 interface DecompressionStreamConstructor {
   new (format: 'gzip'): TransformStream<Uint8Array, Uint8Array>;
 }

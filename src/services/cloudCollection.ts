@@ -88,7 +88,7 @@ export async function listCloudCollection(userId: string): Promise<DbEntry[]> {
     .order('added_at', { ascending: false });
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(`Failed to list cloud collection: ${error.message}`);
   }
 
   const rows = (data ?? []) as unknown as CloudCollectionRow[];
@@ -102,7 +102,7 @@ export async function upsertCloudCollectionEntry(userId: string, entry: DbEntry)
     .upsert(toCloudRow(userId, entry), { onConflict: 'user_id,entry_id' });
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(`Failed to upsert cloud collection entry: ${error.message}`);
   }
 }
 
@@ -119,7 +119,7 @@ export async function upsertCloudCollectionEntries(userId: string, entries: DbEn
     });
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(`Failed to upsert cloud collection entries: ${error.message}`);
   }
 }
 
@@ -132,6 +132,6 @@ export async function deleteCloudCollectionEntry(userId: string, entryId: string
     .eq('entry_id', entryId);
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(`Failed to delete cloud collection entry: ${error.message}`);
   }
 }
