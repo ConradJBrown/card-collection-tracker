@@ -84,7 +84,7 @@ export default function AuthPanel({
 
           {!isConfigured && (
             <p className="text-sm text-amber-300">
-              Add <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to enable sign-in, cloud sync, and recovery flows.
+              Add <code>VITE_SUPABASE_URL</code> and <code>VITE_SUPABASE_ANON_KEY</code> to your <code>.env</code> file to enable sign-in, cloud sync, and recovery flows.
             </p>
           )}
 

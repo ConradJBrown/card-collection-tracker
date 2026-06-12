@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { GameType } from './types';
 import Layout from './components/Layout';
 import CardSearch from './components/CardSearch';
@@ -62,53 +62,49 @@ export default function App() {
   const [guestBackupCount, setGuestBackupCount] = useState(0);
   const [guestBackupUpdatedAt, setGuestBackupUpdatedAt] = useState<string | null>(null);
 
+  const refreshBackupSummary = useCallback(async () => {
+    const backupSummary = await getCollectionBackupSummary();
+    setGuestBackupCount(backupSummary.totalEntries);
+    setGuestBackupUpdatedAt(backupSummary.updatedAt);
+  }, []);
+
+  const restoreGuestCollection = useCallback(async () => {
+    const guestEntries = await getCollectionBackupEntries();
+    await replaceCollection(guestEntries);
+    await refreshBackupSummary();
+    setSyncStatus('idle');
+    setSyncMessage(
+      guestEntries.length > 0
+        ? 'Restored your local guest collection.'
+        : 'Using local-only mode until you connect Supabase.'
+    );
+    setLastSyncedAt(null);
+  }, [refreshBackupSummary]);
+
+  const syncRemoteCollection = useCallback(async (userId: string, preserveGuest: boolean) => {
+    setSyncStatus('syncing');
+    setSyncMessage('Syncing your cloud collection...');
+
+    const localEntries = await listCollectionEntries();
+    if (preserveGuest) {
+      await ensureCollectionBackup(localEntries);
+    }
+
+    const remoteEntries = await listCloudCollection(userId);
+    await replaceCollection(remoteEntries);
+    await refreshBackupSummary();
+
+    setSyncStatus('idle');
+    setSyncMessage(
+      remoteEntries.length > 0
+        ? 'Cloud collection synced to this device.'
+        : 'Cloud account is ready. Import your guest collection to populate it.'
+    );
+    setLastSyncedAt(new Date().toISOString());
+  }, [refreshBackupSummary]);
+
   useEffect(() => {
     let isMounted = true;
-
-    const refreshBackupSummary = async () => {
-      const backupSummary = await getCollectionBackupSummary();
-      if (!isMounted) return;
-      setGuestBackupCount(backupSummary.totalEntries);
-      setGuestBackupUpdatedAt(backupSummary.updatedAt);
-    };
-
-    const restoreGuestCollection = async () => {
-      const guestEntries = await getCollectionBackupEntries();
-      await replaceCollection(guestEntries);
-      await refreshBackupSummary();
-
-      if (!isMounted) return;
-      setSyncStatus('idle');
-      setSyncMessage(
-        guestEntries.length > 0
-          ? 'Restored your local guest collection.'
-          : 'Using local-only mode until you connect Supabase.'
-      );
-      setLastSyncedAt(null);
-    };
-
-    const syncRemoteCollection = async (userId: string, preserveGuest: boolean) => {
-      setSyncStatus('syncing');
-      setSyncMessage('Syncing your cloud collection...');
-
-      const localEntries = await listCollectionEntries();
-      if (preserveGuest) {
-        await ensureCollectionBackup(localEntries);
-      }
-
-      const remoteEntries = await listCloudCollection(userId);
-      await replaceCollection(remoteEntries);
-      await refreshBackupSummary();
-
-      if (!isMounted) return;
-      setSyncStatus('idle');
-      setSyncMessage(
-        remoteEntries.length > 0
-          ? 'Cloud collection synced to this device.'
-          : 'Cloud account is ready. Import your guest collection to populate it.'
-      );
-      setLastSyncedAt(new Date().toISOString());
-    };
 
     const initialize = async () => {
       try {
@@ -167,7 +163,7 @@ export default function App() {
       isMounted = false;
       unsubscribe();
     };
-  }, []);
+  }, [refreshBackupSummary, restoreGuestCollection, syncRemoteCollection]);
 
   useEffect(() => {
     if (!isSupabaseConfigured || !session?.user.id) {
@@ -223,27 +219,7 @@ export default function App() {
     try {
       setAuthLoading(true);
       setAuthError(null);
-      setSyncStatus('syncing');
-      setSyncMessage('Syncing your cloud collection...');
-
-      const localEntries = await listCollectionEntries();
-      if (preserveGuest) {
-        await ensureCollectionBackup(localEntries);
-      }
-
-      const remoteEntries = await listCloudCollection(session.user.id);
-      await replaceCollection(remoteEntries);
-      const backupSummary = await getCollectionBackupSummary();
-
-      setGuestBackupCount(backupSummary.totalEntries);
-      setGuestBackupUpdatedAt(backupSummary.updatedAt);
-      setSyncStatus('idle');
-      setSyncMessage(
-        remoteEntries.length > 0
-          ? 'Cloud collection synced to this device.'
-          : 'Cloud account is ready. Import your guest collection to populate it.'
-      );
-      setLastSyncedAt(new Date().toISOString());
+      await syncRemoteCollection(session.user.id, preserveGuest);
     } catch (error) {
       setSyncStatus('error');
       setSyncMessage(getErrorMessage(error));

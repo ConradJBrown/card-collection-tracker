@@ -1,6 +1,6 @@
 import type { AuthChangeEvent, Session } from '@supabase/supabase-js';
 import { appConfig, isSupabaseConfigured } from '../config/env';
-import { supabase } from './supabaseClient';
+import { requireSupabaseClient, supabase } from './supabaseClient';
 
 export type AppSession = Session;
 export type AuthMode = 'signIn' | 'signUp' | 'reset' | 'recovery';
@@ -16,14 +16,6 @@ export interface AuthProvider {
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updatePassword: (password: string) => Promise<void>;
-}
-
-function requireSupabase() {
-  if (!supabase) {
-    throw new Error('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
-  }
-
-  return supabase;
 }
 
 function throwIfError(error: { message: string } | null, action: string) {
@@ -55,12 +47,12 @@ export const authProvider: AuthProvider = {
     };
   },
   async signIn(email, password) {
-    const client = requireSupabase();
+    const client = requireSupabaseClient();
     const { error } = await client.auth.signInWithPassword({ email, password });
     throwIfError(error, 'Sign in failed');
   },
   async signUp(email, password) {
-    const client = requireSupabase();
+    const client = requireSupabaseClient();
     const { error } = await client.auth.signUp({
       email,
       password,
@@ -71,19 +63,19 @@ export const authProvider: AuthProvider = {
     throwIfError(error, 'Sign up failed');
   },
   async signOut() {
-    const client = requireSupabase();
+    const client = requireSupabaseClient();
     const { error } = await client.auth.signOut();
     throwIfError(error, 'Sign out failed');
   },
   async resetPassword(email) {
-    const client = requireSupabase();
+    const client = requireSupabaseClient();
     const { error } = await client.auth.resetPasswordForEmail(email, {
       redirectTo: appConfig.supabaseRedirectUrl,
     });
     throwIfError(error, 'Password reset failed');
   },
   async updatePassword(password) {
-    const client = requireSupabase();
+    const client = requireSupabaseClient();
     const { error } = await client.auth.updateUser({ password });
     throwIfError(error, 'Password update failed');
   },

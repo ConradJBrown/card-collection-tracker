@@ -178,8 +178,12 @@ class MTGDatabase {
         onProgress({ loaded: totalSize, total: totalSize, status: `Successfully indexed ${cards.length} cards` });
       }
     } catch (error) {
-      const message = error instanceof Error ? error.message : 'Unknown error';
-      throw new Error(`MTG database update failed: ${message}`);
+      if (error instanceof Error) {
+        error.message = `MTG database update failed: ${error.message}`;
+        throw error;
+      }
+
+      throw new Error(`MTG database update failed: ${String(error)}`);
     }
   }
 

@@ -1,5 +1,5 @@
 import { DbEntry } from './db';
-import { supabase } from './supabaseClient';
+import { requireSupabaseClient } from './supabaseClient';
 
 interface CloudCollectionRow {
   user_id: string;
@@ -34,14 +34,6 @@ const COLLECTION_COLUMNS = [
   'added_at',
   'updated_at',
 ].join(', ');
-
-function requireSupabase() {
-  if (!supabase) {
-    throw new Error('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.');
-  }
-
-  return supabase;
-}
 
 function toCloudRow(userId: string, entry: DbEntry): CloudCollectionRow {
   return {
@@ -80,7 +72,7 @@ function toDbEntry(row: CloudCollectionRow): DbEntry {
 }
 
 export async function listCloudCollection(userId: string): Promise<DbEntry[]> {
-  const client = requireSupabase();
+  const client = requireSupabaseClient();
   const { data, error } = await client
     .from('collection_entries')
     .select(COLLECTION_COLUMNS)
@@ -96,7 +88,7 @@ export async function listCloudCollection(userId: string): Promise<DbEntry[]> {
 }
 
 export async function upsertCloudCollectionEntry(userId: string, entry: DbEntry) {
-  const client = requireSupabase();
+  const client = requireSupabaseClient();
   const { error } = await client
     .from('collection_entries')
     .upsert(toCloudRow(userId, entry), { onConflict: 'user_id,entry_id' });
@@ -111,7 +103,7 @@ export async function upsertCloudCollectionEntries(userId: string, entries: DbEn
     return;
   }
 
-  const client = requireSupabase();
+  const client = requireSupabaseClient();
   const { error } = await client
     .from('collection_entries')
     .upsert(entries.map((entry) => toCloudRow(userId, entry)), {
@@ -124,7 +116,7 @@ export async function upsertCloudCollectionEntries(userId: string, entries: DbEn
 }
 
 export async function deleteCloudCollectionEntry(userId: string, entryId: string) {
-  const client = requireSupabase();
+  const client = requireSupabaseClient();
   const { error } = await client
     .from('collection_entries')
     .delete()

@@ -41,8 +41,10 @@ export function configureCollectionSync(handlers: CollectionSyncHandlers) {
   collectionSyncHandlers = handlers;
 }
 
-function toError(error: unknown) {
-  return error instanceof Error ? error : new Error(`Collection sync failed: ${String(error)}`);
+function toError(error: unknown, operation: string) {
+  return error instanceof Error
+    ? new Error(`${operation}: ${error.message}`)
+    : new Error(`${operation}: ${String(error)}`);
 }
 
 async function syncEntry(id: string) {
@@ -53,7 +55,7 @@ async function syncEntry(id: string) {
     if (!entry) return;
     await collectionSyncHandlers.onUpsert(entry);
   } catch (error) {
-    collectionSyncHandlers.onSyncError?.(toError(error));
+    collectionSyncHandlers.onSyncError?.(toError(error, 'Collection sync upsert failed'));
   }
 }
 
@@ -63,7 +65,7 @@ async function syncDelete(id: string) {
   try {
     await collectionSyncHandlers.onDelete(id);
   } catch (error) {
-    collectionSyncHandlers.onSyncError?.(toError(error));
+    collectionSyncHandlers.onSyncError?.(toError(error, 'Collection sync delete failed'));
   }
 }
 
