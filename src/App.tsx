@@ -68,19 +68,6 @@ export default function App() {
     setGuestBackupUpdatedAt(backupSummary.updatedAt);
   }, []);
 
-  const restoreGuestCollection = useCallback(async () => {
-    const guestEntries = await getCollectionBackupEntries();
-    await replaceCollection(guestEntries);
-    await refreshBackupSummary();
-    setSyncStatus('idle');
-    setSyncMessage(
-      guestEntries.length > 0
-        ? 'Restored your local guest collection.'
-        : 'Using local-only mode until you connect Supabase.'
-    );
-    setLastSyncedAt(null);
-  }, [refreshBackupSummary]);
-
   const syncRemoteCollection = useCallback(async (userId: string, preserveGuest: boolean) => {
     setSyncStatus('syncing');
     setSyncMessage('Syncing your cloud collection...');
@@ -150,7 +137,17 @@ export default function App() {
           setAuthMode('signIn');
           setAuthPassword('');
         } else {
-          await restoreGuestCollection();
+          const guestEntries = await getCollectionBackupEntries();
+          await replaceCollection(guestEntries);
+          await refreshBackupSummary();
+          if (!isMounted) return;
+          setSyncStatus('idle');
+          setSyncMessage(
+            guestEntries.length > 0
+              ? 'Restored your local guest collection.'
+              : 'Using local-only mode until you connect Supabase.'
+          );
+          setLastSyncedAt(null);
         }
       } catch (error) {
         if (!isMounted) return;
@@ -163,7 +160,7 @@ export default function App() {
       isMounted = false;
       unsubscribe();
     };
-  }, [refreshBackupSummary, restoreGuestCollection, syncRemoteCollection]);
+  }, [refreshBackupSummary, syncRemoteCollection]);
 
   useEffect(() => {
     if (!isSupabaseConfigured || !session?.user.id) {
