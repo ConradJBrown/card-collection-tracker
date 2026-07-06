@@ -71,7 +71,7 @@ export default function BinderCard({ entry, card }: BinderCardProps) {
             {card?.name ?? '(Card removed from collection)'}
           </p>
           <button
-            onClick={() => void removeCardFromBinder(entry.id)}
+            onClick={() => removeCardFromBinder(entry.id)}
             className="text-slate-500 hover:text-red-400 transition-colors duration-150 flex-shrink-0 text-lg leading-none"
             title="Remove from binder"
           >

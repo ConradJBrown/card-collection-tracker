@@ -32,7 +32,7 @@ function binderToRow(userId: string, binder: Binder): CloudBinderRow {
     name: binder.name,
     description: binder.description ?? null,
     created_at: binder.createdAt,
-    updated_at: new Date().toISOString(),
+    updated_at: binder.updatedAt,
   };
 }
 

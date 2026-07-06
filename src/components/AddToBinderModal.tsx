@@ -83,7 +83,7 @@ export default function AddToBinderModal() {
           {(binders ?? []).map((binder) => (
             <button
               key={binder.id}
-              onClick={() => void handleAddToBinder(binder.id)}
+              onClick={() => handleAddToBinder(binder.id)}
               className="text-left px-3 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors"
             >
               <p className="text-sm font-medium text-slate-100">{binder.name}</p>
@@ -102,12 +102,12 @@ export default function AddToBinderModal() {
               type="text"
               value={newBinderName}
               onChange={(e) => setNewBinderName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === 'Enter') void handleCreateAndAdd(); }}
+              onKeyDown={(e) => { if (e.key === 'Enter') handleCreateAndAdd(); }}
               placeholder="Binder name…"
               className="flex-1 bg-slate-700 border border-slate-600 rounded-md px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-slate-400"
             />
             <button
-              onClick={() => void handleCreateAndAdd()}
+              onClick={() => handleCreateAndAdd()}
               disabled={!newBinderName.trim()}
               className="px-3 py-1.5 text-sm rounded-md bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white transition-colors"
             >

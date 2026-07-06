@@ -204,7 +204,9 @@ export async function listBinderEntries(binderId: string): Promise<BinderEntryWi
   const cardIds = [...new Set(entries.map((e) => e.collectionEntryId))];
   const cards = await db.collection.bulkGet(cardIds);
   const cardMap = new Map<string, DbEntry>();
-  cards.forEach((c) => { if (c) cardMap.set(c.id, c); });
+  for (const c of cards) {
+    if (c) cardMap.set(c.id, c);
+  }
 
   return entries.map((e) => ({ ...e, card: cardMap.get(e.collectionEntryId) }));
 }

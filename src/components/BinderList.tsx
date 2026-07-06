@@ -109,7 +109,7 @@ export default function BinderList() {
             type="text"
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            onKeyDown={(e) => { if (e.key === 'Enter') void handleCreate(); }}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleCreate(); }}
             placeholder="Binder name (e.g. eBay Batch July)"
             className="w-full bg-slate-700 border border-slate-600 rounded-md px-3 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-slate-400"
           />
@@ -128,7 +128,7 @@ export default function BinderList() {
               Cancel
             </button>
             <button
-              onClick={() => void handleCreate()}
+              onClick={() => handleCreate()}
               disabled={!newName.trim()}
               className="px-3 py-1.5 text-sm rounded-md bg-emerald-700 hover:bg-emerald-600 disabled:opacity-40 text-white transition-colors"
             >
@@ -164,7 +164,7 @@ export default function BinderList() {
                     )}
                   </div>
                   <button
-                    onClick={() => void handleDelete(binder.id, binder.name)}
+                    onClick={() => handleDelete(binder.id, binder.name)}
                     className="text-slate-500 hover:text-red-400 transition-colors flex-shrink-0 text-lg leading-none"
                     title="Delete binder"
                   >
@@ -200,7 +200,7 @@ export default function BinderList() {
                     View
                   </button>
                   <button
-                    onClick={() => void handleExport(binder.id)}
+                    onClick={() => handleExport(binder.id)}
                     className="flex-1 py-1.5 text-xs font-medium rounded-md bg-emerald-800 hover:bg-emerald-700 text-emerald-100 transition-colors"
                   >
                     ⬇ Export CSV
