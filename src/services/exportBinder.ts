@@ -44,7 +44,7 @@ export async function exportBinderToCsv(binderId: string): Promise<void> {
       escapeCsvValue(entry.sellQty),
       escapeCsvValue(entry.askingPrice),
       escapeCsvValue(entry.notes),
-      escapeCsvValue(card?.cardId),
+      escapeCsvValue(card?.cardId ?? entry.collectionEntryId),
     ];
     rows.push(row.join(','));
   }
