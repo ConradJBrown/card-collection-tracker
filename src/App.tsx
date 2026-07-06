@@ -85,6 +85,8 @@ export default function App() {
     setSyncMessage('Syncing your cloud collection...');
 
     const localEntries = await listCollectionEntries();
+    const localBinders = preserveGuest ? await db.binders.toArray() : [];
+    const localBinderEntries = preserveGuest ? await db.binder_entries.toArray() : [];
     if (preserveGuest) {
       await ensureCollectionBackup(localEntries);
     }
@@ -96,11 +98,26 @@ export default function App() {
     // Sync binders
     const remoteBinders = await listCloudBinders(userId);
     const remoteBinderEntries = await listCloudBinderEntries(userId);
+    const mergedBinders = new Map(remoteBinders.map((binder) => [binder.id, binder]));
+    const mergedBinderEntries = new Map(remoteBinderEntries.map((entry) => [entry.id, entry]));
+
+    for (const binder of localBinders) {
+      await upsertCloudBinder(userId, binder);
+      mergedBinders.set(binder.id, binder);
+    }
+
+    for (const entry of localBinderEntries) {
+      await upsertCloudBinderEntry(userId, entry);
+      mergedBinderEntries.set(entry.id, entry);
+    }
+
     await db.transaction('rw', db.binders, db.binder_entries, async () => {
       await db.binders.clear();
       await db.binder_entries.clear();
-      if (remoteBinders.length > 0) await db.binders.bulkPut(remoteBinders);
-      if (remoteBinderEntries.length > 0) await db.binder_entries.bulkPut(remoteBinderEntries);
+      if (mergedBinders.size > 0) await db.binders.bulkPut([...mergedBinders.values()]);
+      if (mergedBinderEntries.size > 0) {
+        await db.binder_entries.bulkPut([...mergedBinderEntries.values()]);
+      }
     });
 
     setSyncStatus('idle');
