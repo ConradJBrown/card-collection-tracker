@@ -31,6 +31,12 @@ interface DatabaseMetadata {
   cardCount: number;
 }
 
+// Provides a local type for the browser DecompressionStream constructor when
+// the active TypeScript DOM lib configuration does not expose it directly.
+interface DecompressionStreamConstructor {
+  new (format: 'gzip'): TransformStream<Uint8Array, Uint8Array>;
+}
+
 const DB_NAME = 'mtg-cards';
 const STORE_NAME = 'cards';
 const METADATA_KEY = 'metadata';
@@ -122,7 +128,6 @@ class MTGDatabase {
     onProgress?: (progress: { loaded: number; total: number; status: string }) => void
   ): Promise<void> {
     try {
-      // Fetch bulk data metadata
       if (onProgress) onProgress({ loaded: 0, total: 100, status: 'Fetching metadata...' });
       const metaRes = await fetch('https://api.scryfall.com/bulk-data');
       if (!metaRes.ok) throw new Error('Failed to fetch bulk data metadata');
@@ -134,18 +139,15 @@ class MTGDatabase {
       const totalSize = oracleData.size;
       if (onProgress) onProgress({ loaded: 0, total: totalSize, status: 'Downloading MTG database...' });
 
-      // Download the gzipped JSON
       const downloadRes = await fetch(oracleData.download_uri);
       if (!downloadRes.ok) throw new Error('Failed to download MTG database');
 
-      // Read response as ArrayBuffer and decompress
       const buffer = await downloadRes.arrayBuffer();
       const decompressed = await this.decompressGzip(buffer);
       const jsonString = new TextDecoder().decode(decompressed);
 
       if (onProgress) onProgress({ loaded: totalSize, total: totalSize, status: 'Processing cards...' });
 
-      // Parse JSON and build search index
       const cards: ScryfallCard[] = JSON.parse(jsonString);
       const searchIndex: Record<string, CardResult> = {};
 
@@ -162,7 +164,6 @@ class MTGDatabase {
         };
       });
 
-      // Clear old data and save new index
       await this.clearDatabase();
       await this.setSearchIndex(searchIndex);
 
@@ -173,10 +174,16 @@ class MTGDatabase {
       };
       await this.setMetadata(metadata);
 
-      if (onProgress)
+      if (onProgress) {
         onProgress({ loaded: totalSize, total: totalSize, status: `Successfully indexed ${cards.length} cards` });
+      }
     } catch (error) {
-      throw error;
+      if (error instanceof Error) {
+        error.message = `MTG database update failed: ${error.message}`;
+        throw error;
+      }
+
+      throw new Error(`MTG database update failed: ${String(error)}`);
     }
   }
 
@@ -190,9 +197,9 @@ class MTGDatabase {
         },
       });
 
-      const decompressed = stream.pipeThrough(
-        new (globalThis as any).DecompressionStream('gzip')
-      );
+      const DecompressionStreamCtor =
+        globalThis.DecompressionStream as DecompressionStreamConstructor;
+      const decompressed = stream.pipeThrough(new DecompressionStreamCtor('gzip'));
 
       const reader = decompressed.getReader() as ReadableStreamDefaultReader<Uint8Array>;
       const chunks: Uint8Array[] = [];

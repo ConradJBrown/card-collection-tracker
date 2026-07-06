@@ -50,18 +50,18 @@ export default function CollectionView({ game }: CollectionViewProps) {
   );
 
   // Derive option lists for filter dropdowns from actual collection data
-  const base = (allEntries ?? []) as DbEntry[];
+  const base = useMemo(() => (allEntries ?? []) as DbEntry[], [allEntries]);
   const typeOptions = useMemo(
     () => [...new Set(base.map((e) => e.type).filter((t): t is string => !!t))].sort(),
-    [allEntries]
+    [base]
   );
   const setOptions = useMemo(
     () => [...new Set(base.map((e) => e.set).filter((s): s is string => !!s))].sort(),
-    [allEntries]
+    [base]
   );
   const rarityOptions = useMemo(
     () => [...new Set(base.map((e) => e.rarity).filter((r): r is string => !!r))].sort(),
-    [allEntries]
+    [base]
   );
 
   // Apply search + filters + sort in JS (per-game subsets are small enough)
@@ -81,11 +81,11 @@ export default function CollectionView({ game }: CollectionViewProps) {
       return sortDir === 'asc' ? cmp : -cmp;
     });
     return result;
-  }, [allEntries, searchTerm, filterType, filterSet, filterRarity, sortBy, sortDir]);
+  }, [base, searchTerm, filterType, filterSet, filterRarity, sortBy, sortDir]);
 
   const totalCards = useMemo(
     () => base.reduce((sum: number, e: DbEntry) => sum + e.quantity, 0),
-    [allEntries]
+    [base]
   );
 
   // Virtual scroll

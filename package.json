@@ -10,6 +10,7 @@
     "lint": "eslint src --ext .ts,.tsx"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.108.1",
     "@tanstack/react-virtual": "^3.13.23",
     "dexie": "^4.4.2",
     "dexie-react-hooks": "^4.4.0",
