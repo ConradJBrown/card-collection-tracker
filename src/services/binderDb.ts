@@ -145,7 +145,9 @@ export async function addCardToBinder(
     if (askingPrice !== undefined) updated.askingPrice = askingPrice;
     if (notes !== undefined) updated.notes = notes;
     await db.binder_entries.update(existing.id, updated);
-    await db.binders.update(binderId, { updatedAt: new Date().toISOString() });
+    const now = new Date().toISOString();
+    await db.binders.update(binderId, { updatedAt: now });
+    void syncBinder(binderId);
     void syncBinderEntry(existing.id);
     return { ...existing, ...updated };
   }
