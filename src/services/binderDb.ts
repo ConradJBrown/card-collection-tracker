@@ -154,7 +154,7 @@ export async function addCardToBinder(
 
   const now = new Date().toISOString();
   const entry: BinderEntry = {
-    id: generateId(),
+    id: `${binderId}::${collectionEntryId}`,
     binderId,
     collectionEntryId,
     sellQty,
