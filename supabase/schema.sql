@@ -60,8 +60,33 @@ create table if not exists public.collection_entries (
   primary key (user_id, entry_id)
 );
 
+create table if not exists public.binders (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  binder_id text not null,
+  name text not null,
+  description text,
+  created_at timestamptz not null,
+  updated_at timestamptz not null default timezone('utc', now()),
+  primary key (user_id, binder_id)
+);
+
+create table if not exists public.binder_entries (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  binder_id text not null,
+  entry_id text not null,
+  collection_entry_id text not null,
+  sell_qty integer not null check (sell_qty > 0),
+  asking_price numeric(10, 2),
+  notes text,
+  added_at timestamptz not null,
+  primary key (user_id, binder_id, entry_id),
+  foreign key (user_id, binder_id) references public.binders(user_id, binder_id) on delete cascade
+);
+
 alter table public.profiles enable row level security;
 alter table public.collection_entries enable row level security;
+alter table public.binders enable row level security;
+alter table public.binder_entries enable row level security;
 
 drop policy if exists "Users can view their own profile" on public.profiles;
 create policy "Users can view their own profile"
@@ -84,6 +109,20 @@ create policy "Users can insert their own profile"
 drop policy if exists "Users can manage their own collection" on public.collection_entries;
 create policy "Users can manage their own collection"
   on public.collection_entries
+  for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can manage their own binders" on public.binders;
+create policy "Users can manage their own binders"
+  on public.binders
+  for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users can manage their own binder entries" on public.binder_entries;
+create policy "Users can manage their own binder entries"
+  on public.binder_entries
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);

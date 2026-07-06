@@ -17,3 +17,23 @@ export interface CollectionEntry {
   condition: 'Mint' | 'Near Mint' | 'Lightly Played' | 'Moderately Played' | 'Heavily Played' | 'Damaged';
   addedAt: string;
 }
+
+export interface Binder {
+  id: string;
+  name: string;
+  description?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BinderEntry {
+  id: string;
+  binderId: string;
+  /** References a DbEntry.id in the collection */
+  collectionEntryId: string;
+  /** How many copies to list for sale (≥ 1, ≤ collection qty) */
+  sellQty: number;
+  askingPrice?: number;
+  notes?: string;
+  addedAt: string;
+}

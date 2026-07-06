@@ -3,6 +3,8 @@ import { GameType } from './types';
 import Layout from './components/Layout';
 import CardSearch from './components/CardSearch';
 import CollectionView from './components/CollectionView';
+import BinderList from './components/BinderList';
+import AddToBinderModal from './components/AddToBinderModal';
 import AuthPanel from './components/AuthPanel';
 import { appConfig, isSupabaseConfigured } from './config/env';
 import { AuthMode, authProvider, AppSession } from './services/authProvider';
@@ -10,6 +12,7 @@ import {
   configureCollectionSync,
   listCollectionEntries,
   replaceCollection,
+  db,
 } from './services/db';
 import {
   deleteCloudCollectionEntry,
@@ -18,13 +21,22 @@ import {
   upsertCloudCollectionEntry,
 } from './services/cloudCollection';
 import {
+  listCloudBinders,
+  listCloudBinderEntries,
+  upsertCloudBinder,
+  upsertCloudBinderEntry,
+  deleteCloudBinder,
+  deleteCloudBinderEntry,
+} from './services/cloudBinders';
+import { configureBinderSync } from './services/binderDb';
+import {
   ensureCollectionBackup,
   getCollectionBackupEntries,
   getCollectionBackupSummary,
 } from './services/localCollectionBackup';
 import { migrateLegacyCollection } from './services/legacyCollection';
 
-type ActiveTab = 'search' | 'collection';
+type ActiveTab = 'search' | 'collection' | 'binders';
 type SyncStatus = 'idle' | 'syncing' | 'error';
 
 const TAB_STYLES: Record<GameType, { active: string; inactive: string }> = {
@@ -80,6 +92,16 @@ export default function App() {
     const remoteEntries = await listCloudCollection(userId);
     await replaceCollection(remoteEntries);
     await refreshBackupSummary();
+
+    // Sync binders
+    const remoteBinders = await listCloudBinders(userId);
+    const remoteBinderEntries = await listCloudBinderEntries(userId);
+    await db.transaction('rw', db.binders, db.binder_entries, async () => {
+      await db.binders.clear();
+      await db.binder_entries.clear();
+      if (remoteBinders.length > 0) await db.binders.bulkPut(remoteBinders);
+      if (remoteBinderEntries.length > 0) await db.binder_entries.bulkPut(remoteBinderEntries);
+    });
 
     setSyncStatus('idle');
     setSyncMessage(
@@ -205,8 +227,52 @@ export default function App() {
       },
     });
 
+    configureBinderSync({
+      onUpsertBinder: async (binder) => {
+        try {
+          await upsertCloudBinder(userId, binder);
+          setLastSyncedAt(new Date().toISOString());
+        } catch (error) {
+          setSyncStatus('error');
+          setSyncMessage(getErrorMessage(error));
+        }
+      },
+      onDeleteBinder: async (binderId) => {
+        try {
+          await deleteCloudBinder(userId, binderId);
+          setLastSyncedAt(new Date().toISOString());
+        } catch (error) {
+          setSyncStatus('error');
+          setSyncMessage(getErrorMessage(error));
+        }
+      },
+      onUpsertBinderEntry: async (entry) => {
+        try {
+          await upsertCloudBinderEntry(userId, entry);
+          setLastSyncedAt(new Date().toISOString());
+        } catch (error) {
+          setSyncStatus('error');
+          setSyncMessage(getErrorMessage(error));
+        }
+      },
+      onDeleteBinderEntry: async (binderId, entryId) => {
+        try {
+          await deleteCloudBinderEntry(userId, binderId, entryId);
+          setLastSyncedAt(new Date().toISOString());
+        } catch (error) {
+          setSyncStatus('error');
+          setSyncMessage(getErrorMessage(error));
+        }
+      },
+      onSyncError: (error) => {
+        setSyncStatus('error');
+        setSyncMessage(error.message);
+      },
+    });
+
     return () => {
       configureCollectionSync({});
+      configureBinderSync({});
     };
   }, [session]);
 
@@ -338,14 +404,28 @@ export default function App() {
               {tab === 'search' ? 'Search' : 'My Collection'}
             </button>
           ))}
+          <button
+            onClick={() => setActiveTab('binders')}
+            className={`pb-3 text-sm font-medium border-b-2 transition-colors duration-150 ${
+              activeTab === 'binders'
+                ? 'border-emerald-400 text-emerald-400'
+                : 'border-transparent text-slate-400 hover:text-emerald-300'
+            }`}
+          >
+            Binders
+          </button>
         </nav>
       </div>
 
       {activeTab === 'search' ? (
         <CardSearch key={activeGame} game={activeGame} />
-      ) : (
+      ) : activeTab === 'collection' ? (
         <CollectionView key={activeGame} game={activeGame} />
+      ) : (
+        <BinderList />
       )}
+
+      <AddToBinderModal />
     </Layout>
   );
 }
