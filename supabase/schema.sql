@@ -76,10 +76,11 @@ create table if not exists public.binder_entries (
   entry_id text not null,
   collection_entry_id text not null,
   sell_qty integer not null check (sell_qty > 0),
-  asking_price numeric(10, 2),
+  asking_price numeric(10, 2) check (asking_price is null or asking_price >= 0),
   notes text,
   added_at timestamptz not null,
   primary key (user_id, binder_id, entry_id),
+  unique (user_id, binder_id, collection_entry_id),
   foreign key (user_id, binder_id) references public.binders(user_id, binder_id) on delete cascade
 );
 
