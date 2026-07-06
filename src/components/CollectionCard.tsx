@@ -1,4 +1,5 @@
 import { DbEntry, removeCard, incrementQty, decrementQty, setCondition } from '../services/db';
+import { useBinderStore } from '../store/binderStore';
 
 interface CollectionCardProps {
   entry: DbEntry;
@@ -21,6 +22,7 @@ const GAME_ACCENT: Record<string, string> = {
 
 export default function CollectionCard({ entry }: CollectionCardProps) {
   const accent = GAME_ACCENT[entry.game] ?? 'border-slate-600';
+  const openAddToBinder = useBinderStore((s) => s.openAddToBinder);
 
   return (
     <div className={`bg-slate-800 rounded-lg shadow-md overflow-hidden flex gap-4 p-4 border-l-4 ${accent}`}>
@@ -42,13 +44,22 @@ export default function CollectionCard({ entry }: CollectionCardProps) {
       <div className="flex-1 min-w-0 flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
           <p className="font-semibold text-slate-100 leading-tight text-sm">{entry.name}</p>
-          <button
-            onClick={() => removeCard(entry.id)}
-            className="text-slate-500 hover:text-red-400 transition-colors duration-150 flex-shrink-0 text-lg leading-none"
-            title="Remove from collection"
-          >
-            ×
-          </button>
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={() => openAddToBinder(entry.id)}
+              className="text-slate-500 hover:text-emerald-400 transition-colors duration-150 text-sm leading-none px-1"
+              title="Add to binder"
+            >
+              📁
+            </button>
+            <button
+              onClick={() => removeCard(entry.id)}
+              className="text-slate-500 hover:text-red-400 transition-colors duration-150 text-lg leading-none"
+              title="Remove from collection"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {entry.type && (

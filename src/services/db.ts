@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import { GameType } from '../types';
+import { Binder, BinderEntry, GameType } from '../types';
 
 export interface DbEntry {
   id: string; // "${game}-${cardId}"
@@ -24,12 +24,19 @@ export interface CollectionSyncHandlers {
 
 class CollectionDb extends Dexie {
   collection!: Table<DbEntry, string>;
+  binders!: Table<Binder, string>;
+  binder_entries!: Table<BinderEntry, string>;
 
   constructor() {
     super('CardCollectionDb');
     this.version(1).stores({
       // Primary key: id. Indexed columns follow.
       collection: 'id, game, [game+name], [game+addedAt], [game+quantity], [game+type], [game+set]',
+    });
+    this.version(2).stores({
+      collection: 'id, game, [game+name], [game+addedAt], [game+quantity], [game+type], [game+set]',
+      binders: 'id, createdAt',
+      binder_entries: 'id, binderId, collectionEntryId, [binderId+collectionEntryId]',
     });
   }
 }
