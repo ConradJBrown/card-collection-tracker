@@ -5,11 +5,14 @@ import { db } from '../services/db';
 import { BinderEntryWithCard, listBinderEntries } from '../services/binderDb';
 import { exportBinderToCsv } from '../services/exportBinder';
 import { useBinderStore } from '../store/binderStore';
+import { formatCurrencyPrice } from '../services/priceUtils';
+import { usePriceDisplayStore } from '../store/priceDisplayStore';
 import BinderCard from './BinderCard';
 
 export default function BinderView() {
   const activeBinderId = useBinderStore((s) => s.activeBinderId);
   const clearActiveBinder = useBinderStore((s) => s.clearActiveBinder);
+  const currency = usePriceDisplayStore((s) => s.currency);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [exportError, setExportError] = useState<string | null>(null);
@@ -33,6 +36,15 @@ export default function BinderView() {
 
   const totalSellQty = useMemo(
     () => (rawEntries ?? []).reduce((sum, e) => sum + e.sellQty, 0),
+    [rawEntries]
+  );
+
+  const estimatedBinderTotal = useMemo(
+    () =>
+      (rawEntries ?? []).reduce(
+        (sum, entry) => sum + (entry.card?.estimatedPrice ?? entry.card?.priceMid ?? 0) * entry.sellQty,
+        0
+      ),
     [rawEntries]
   );
 
@@ -73,6 +85,11 @@ export default function BinderView() {
           <span className="bg-slate-700 text-slate-300 text-xs font-medium px-2.5 py-0.5 rounded-full">
             {(rawEntries ?? []).length} cards · {totalSellQty} to sell
           </span>
+          {estimatedBinderTotal > 0 && (
+            <span className="bg-emerald-900/40 text-emerald-200 text-xs font-medium px-2.5 py-0.5 rounded-full">
+              Est. total {formatCurrencyPrice(estimatedBinderTotal, currency)}
+            </span>
+          )}
           <button
             onClick={() => handleExport()}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-emerald-700 hover:bg-emerald-600 text-white transition-colors duration-150"

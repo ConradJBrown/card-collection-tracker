@@ -77,8 +77,14 @@ export default function CardSearch({ game }: CardSearchProps) {
       if (game === 'yugioh') {
         cards = await searchYugioh(trimmed);
       } else if (game === 'mtg') {
-        const localCards = await mtgDatabase.searchLocal(trimmed);
-        cards = localCards.length > 0 ? localCards : await searchMtg(trimmed);
+        const [localCards, remoteCards] = await Promise.all([
+          mtgDatabase.searchLocal(trimmed),
+          searchMtg(trimmed),
+        ]);
+
+        // Prefer the remote search when it returns actual printings, but keep
+        // the local index as a fallback for offline or failed lookups.
+        cards = remoteCards.length > 0 ? remoteCards : localCards;
       } else if (game === 'pokemon') {
         cards = await searchPokemon(trimmed);
       }

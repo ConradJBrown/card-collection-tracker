@@ -11,6 +11,10 @@ export interface DbEntry {
   set?: string;
   rarity?: string;
   description?: string;
+  priceLow?: number;
+  priceMid?: number;
+  priceHigh?: number;
+  estimatedPrice?: number;
   quantity: number;
   condition: 'Mint' | 'Near Mint' | 'Lightly Played' | 'Moderately Played' | 'Heavily Played' | 'Damaged';
   addedAt: string;

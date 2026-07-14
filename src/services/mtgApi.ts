@@ -1,4 +1,5 @@
 import { CardResult } from '../types';
+import { estimateMarketPrice } from './priceUtils';
 
 interface ScryfallImageUris {
   normal?: string;
@@ -13,6 +14,11 @@ interface ScryfallCard {
   oracle_text?: string;
   set_name?: string;
   rarity?: string;
+  prices?: {
+    usd?: string | null;
+    usd_foil?: string | null;
+    usd_etched?: string | null;
+  };
 }
 
 interface ScryfallResponse {
@@ -22,11 +28,12 @@ interface ScryfallResponse {
 export async function searchMtg(name: string): Promise<CardResult[]> {
   try {
     const res = await fetch(
-      `https://api.scryfall.com/cards/search?q=${encodeURIComponent(name)}`
+      `https://api.scryfall.com/cards/search?unique=prints&q=${encodeURIComponent(name)}`
     );
     if (!res.ok) return [];
     const json: ScryfallResponse = await res.json();
-    return json.data.map((card) => ({
+
+    const cards: CardResult[] = json.data.map((card) => ({
       id: card.id,
       name: card.name,
       imageUrl:
@@ -38,7 +45,13 @@ export async function searchMtg(name: string): Promise<CardResult[]> {
       description: card.oracle_text,
       set: card.set_name,
       rarity: card.rarity,
+      estimatedPrice: estimateMarketPrice([
+        card.prices?.usd,
+        card.prices?.usd_foil,
+        card.prices?.usd_etched,
+      ]),
     }));
+    return cards;
   } catch {
     return [];
   }

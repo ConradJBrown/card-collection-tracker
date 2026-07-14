@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { BinderEntry } from '../types';
 import { DbEntry } from '../services/db';
 import { removeCardFromBinder, updateBinderEntry } from '../services/binderDb';
+import { formatCurrencyPrice } from '../services/priceUtils';
+import { usePriceDisplayStore } from '../store/priceDisplayStore';
 
 interface BinderCardProps {
   entry: BinderEntry;
@@ -16,6 +18,7 @@ const GAME_ACCENT: Record<string, string> = {
 
 export default function BinderCard({ entry, card }: BinderCardProps) {
   const accent = card ? (GAME_ACCENT[card.game] ?? 'border-slate-600') : 'border-slate-600';
+  const currency = usePriceDisplayStore((s) => s.currency);
 
   const [priceInput, setPriceInput] = useState(
     entry.askingPrice !== undefined ? String(entry.askingPrice) : ''
@@ -87,6 +90,11 @@ export default function BinderCard({ entry, card }: BinderCardProps) {
         )}
         {card?.condition && (
           <p className="text-xs text-slate-500">{card.condition}</p>
+        )}
+        {(card?.estimatedPrice !== undefined || card?.priceMid !== undefined) && (
+          <p className="text-xs font-medium text-emerald-300">
+            Est. per card {formatCurrencyPrice(card?.estimatedPrice ?? card?.priceMid, currency)}
+          </p>
         )}
 
         {/* Sell Qty stepper */}

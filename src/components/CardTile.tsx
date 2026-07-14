@@ -1,6 +1,8 @@
 import { CardResult } from '../types';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, addOrIncrementCard } from '../services/db';
+import { formatCurrencyPrice } from '../services/priceUtils';
+import { usePriceDisplayStore } from '../store/priceDisplayStore';
 
 interface CardTileProps {
   card: CardResult;
@@ -21,6 +23,7 @@ const GAME_LABEL: Record<string, string> = {
 export default function CardTile({ card }: CardTileProps) {
   const key = `${card.game}-${card.id}`;
   const inCollection = useLiveQuery(() => db.collection.get(key).then(Boolean), [key], false);
+  const currency = usePriceDisplayStore((s) => s.currency);
 
   const handleAdd = () => {
     addOrIncrementCard({
@@ -33,6 +36,7 @@ export default function CardTile({ card }: CardTileProps) {
       set: card.set,
       rarity: card.rarity,
       description: card.description,
+      estimatedPrice: card.estimatedPrice ?? card.priceMid,
     });
   };
 
@@ -65,6 +69,16 @@ export default function CardTile({ card }: CardTileProps) {
         </p>
         {card.type && (
           <p className="text-xs text-slate-400 truncate">{card.type}</p>
+        )}
+        {(card.set || card.rarity) && (
+          <p className="text-xs text-slate-500 truncate">
+            {card.set}{card.set && card.rarity ? ' · ' : ''}{card.rarity}
+          </p>
+        )}
+        {(card.estimatedPrice !== undefined || card.priceMid !== undefined) && (
+          <p className="text-xs font-medium text-emerald-300">
+            Est. {formatCurrencyPrice(card.estimatedPrice ?? card.priceMid, currency)}
+          </p>
         )}
         <div className="mt-auto pt-2">
           {inCollection ? (

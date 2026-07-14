@@ -4,6 +4,8 @@ import { db } from '../services/db';
 import { createBinder, deleteBinder } from '../services/binderDb';
 import { exportBinderToCsv } from '../services/exportBinder';
 import { useBinderStore } from '../store/binderStore';
+import { formatCurrencyPrice } from '../services/priceUtils';
+import { usePriceDisplayStore } from '../store/priceDisplayStore';
 import BinderView from './BinderView';
 
 const GAME_LABEL: Record<string, string> = {
@@ -21,6 +23,7 @@ const GAME_CHIP: Record<string, string> = {
 export default function BinderList() {
   const activeBinderId = useBinderStore((s) => s.activeBinderId);
   const setActiveBinder = useBinderStore((s) => s.setActiveBinder);
+  const currency = usePriceDisplayStore((s) => s.currency);
 
   const [showNewForm, setShowNewForm] = useState(false);
   const [newName, setNewName] = useState('');
@@ -43,13 +46,17 @@ export default function BinderList() {
     const entries = (binderEntries ?? []).filter((e) => e.binderId === binderId);
     const cardMap = new Map((collectionCards ?? []).map((c) => [c.id, c]));
     const gameCounts: Record<string, number> = {};
+    let estimatedTotal = 0;
+
     for (const e of entries) {
       const card = cardMap.get(e.collectionEntryId);
       if (card) {
         gameCounts[card.game] = (gameCounts[card.game] ?? 0) + 1;
+        const estimatedPerCard = card.estimatedPrice ?? card.priceMid ?? 0;
+        estimatedTotal += estimatedPerCard * e.sellQty;
       }
     }
-    return { count: entries.length, gameCounts };
+    return { count: entries.length, gameCounts, estimatedTotal };
   };
 
   const handleCreate = async () => {
@@ -150,7 +157,7 @@ export default function BinderList() {
       ) : (
         <div className="grid gap-3">
           {(binders ?? []).map((binder) => {
-            const { count, gameCounts } = getBinderStats(binder.id);
+            const { count, gameCounts, estimatedTotal } = getBinderStats(binder.id);
             return (
               <div
                 key={binder.id}
@@ -177,6 +184,11 @@ export default function BinderList() {
                   <span className="text-xs text-slate-400">
                     {count} {count === 1 ? 'card' : 'cards'}
                   </span>
+                  {estimatedTotal > 0 && (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-900/40 text-emerald-200">
+                      Est. total {formatCurrencyPrice(estimatedTotal, currency)}
+                    </span>
+                  )}
                   {Object.entries(gameCounts).map(([game, n]) => (
                     <span
                       key={game}

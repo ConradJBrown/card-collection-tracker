@@ -57,6 +57,8 @@ export default function AuthPanel({
   onImportLocalData,
 }: AuthPanelProps) {
   const isSignedIn = Boolean(sessionEmail);
+  const emailId = 'auth-email';
+  const passwordId = 'auth-password';
 
   return (
     <section className="mb-6 rounded-xl border border-slate-700 bg-slate-950/70 p-4 shadow-lg">
@@ -134,27 +136,57 @@ export default function AuthPanel({
 
             <form onSubmit={onSubmit} className="space-y-3">
               {mode !== 'recovery' && (
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(event) => onEmailChange(event.target.value)}
-                  placeholder="Email address"
-                  autoComplete="email"
-                  required
-                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-slate-500 focus:outline-none"
-                />
+                <div className="space-y-1">
+                  <label htmlFor={emailId} className="sr-only">
+                    Email address
+                  </label>
+                  <input
+                    id={emailId}
+                    type="email"
+                    value={email}
+                    onChange={(event) => onEmailChange(event.target.value)}
+                    placeholder="Email address"
+                    autoComplete="email"
+                    required
+                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-slate-500 focus:outline-none"
+                  />
+                </div>
               )}
 
-              {mode !== 'reset' && (
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(event) => onPasswordChange(event.target.value)}
-                  placeholder={mode === 'recovery' ? 'New password' : 'Password'}
-                  autoComplete={mode === 'signUp' || mode === 'recovery' ? 'new-password' : 'current-password'}
-                  required
-                  className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-slate-500 focus:outline-none"
-                />
+              {mode !== 'reset' && mode !== 'signUp' && mode !== 'recovery' && (
+                <div className="space-y-1">
+                  <label htmlFor={passwordId} className="sr-only">
+                    Password
+                  </label>
+                  <input
+                    id={passwordId}
+                    type="password"
+                    value={password}
+                    onChange={(event) => onPasswordChange(event.target.value)}
+                    placeholder="Password"
+                    autoComplete="current-password"
+                    required
+                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-slate-500 focus:outline-none"
+                  />
+                </div>
+              )}
+
+              {(mode === 'signUp' || mode === 'recovery') && (
+                <div className="space-y-1">
+                  <label htmlFor={passwordId} className="sr-only">
+                    {mode === 'recovery' ? 'New password' : 'Password'}
+                  </label>
+                  <input
+                    id={passwordId}
+                    type="password"
+                    value={password}
+                    onChange={(event) => onPasswordChange(event.target.value)}
+                    placeholder={mode === 'recovery' ? 'New password' : 'Password'}
+                    autoComplete="new-password"
+                    required
+                    className="w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder-slate-500 focus:border-slate-500 focus:outline-none"
+                  />
+                </div>
               )}
 
               <button

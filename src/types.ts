@@ -9,6 +9,10 @@ export interface CardResult {
   set?: string;
   rarity?: string;
   description?: string;
+  priceLow?: number;
+  priceMid?: number;
+  priceHigh?: number;
+  estimatedPrice?: number;
 }
 
 export interface CollectionEntry {

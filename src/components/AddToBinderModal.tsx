@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../services/db';
 import { addCardToBinder, createBinder } from '../services/binderDb';
@@ -8,6 +8,7 @@ export default function AddToBinderModal() {
   const isOpen = useBinderStore((s) => s.isAddToBinderOpen);
   const targetEntryId = useBinderStore((s) => s.addToBinderTargetEntryId);
   const closeAddToBinder = useBinderStore((s) => s.closeAddToBinder);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
   const [newBinderName, setNewBinderName] = useState('');
   const [creatingNew, setCreatingNew] = useState(false);
@@ -15,6 +16,21 @@ export default function AddToBinderModal() {
   const [error, setError] = useState<string | null>(null);
 
   const binders = useLiveQuery(() => db.binders.orderBy('createdAt').reverse().toArray(), []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    dialogRef.current?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeAddToBinder();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [closeAddToBinder, isOpen]);
 
   if (!isOpen || !targetEntryId) return null;
 
@@ -53,16 +69,31 @@ export default function AddToBinderModal() {
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60"
       onClick={(e) => { if (e.target === e.currentTarget) closeAddToBinder(); }}
     >
-      <div className="bg-slate-800 rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:max-w-sm p-5 flex flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <h3 className="text-base font-semibold text-slate-100">Add to Binder</h3>
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-to-binder-title"
+        aria-describedby="add-to-binder-description"
+        tabIndex={-1}
+        className="bg-slate-800 rounded-t-2xl sm:rounded-xl shadow-2xl w-full sm:max-w-sm p-5 flex flex-col gap-4 outline-none"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <h3 id="add-to-binder-title" className="text-base font-semibold text-slate-100">
+            Add to Binder
+          </h3>
           <button
             onClick={closeAddToBinder}
+            aria-label="Close add to binder dialog"
             className="text-slate-400 hover:text-slate-200 text-xl leading-none"
           >
             ×
           </button>
         </div>
+
+        <p id="add-to-binder-description" className="text-sm text-slate-400">
+          Choose a binder or create a new one for the selected card.
+        </p>
 
         {toast && (
           <div className="bg-emerald-800 text-emerald-100 text-sm rounded-md px-3 py-2 text-center">
@@ -74,7 +105,7 @@ export default function AddToBinderModal() {
         )}
 
         {/* Binder list */}
-        <div className="flex flex-col gap-2 max-h-60 overflow-y-auto">
+        <div className="flex flex-col gap-2 max-h-60 overflow-y-auto" aria-label="Available binders">
           {(binders ?? []).length === 0 && !creatingNew && (
             <p className="text-sm text-slate-400 text-center py-4">
               No binders yet. Create one below.

@@ -1,5 +1,7 @@
 import { DbEntry, removeCard, incrementQty, decrementQty, setCondition } from '../services/db';
 import { useBinderStore } from '../store/binderStore';
+import { formatCurrencyPrice } from '../services/priceUtils';
+import { usePriceDisplayStore } from '../store/priceDisplayStore';
 
 interface CollectionCardProps {
   entry: DbEntry;
@@ -23,6 +25,7 @@ const GAME_ACCENT: Record<string, string> = {
 export default function CollectionCard({ entry }: CollectionCardProps) {
   const accent = GAME_ACCENT[entry.game] ?? 'border-slate-600';
   const openAddToBinder = useBinderStore((s) => s.openAddToBinder);
+  const currency = usePriceDisplayStore((s) => s.currency);
 
   return (
     <div className={`bg-slate-800 rounded-lg shadow-md overflow-hidden flex gap-4 p-4 border-l-4 ${accent}`}>
@@ -68,6 +71,11 @@ export default function CollectionCard({ entry }: CollectionCardProps) {
         {entry.set && (
           <p className="text-xs text-slate-500 truncate">{entry.set}{entry.rarity ? ` · ${entry.rarity}` : ''}</p>
         )}
+        {(entry.estimatedPrice !== undefined || entry.priceMid !== undefined) && (
+          <p className="text-xs font-medium text-emerald-300">
+            Est. per card {formatCurrencyPrice(entry.estimatedPrice ?? entry.priceMid, currency)}
+          </p>
+        )}
 
         <div className="flex items-center gap-3 flex-wrap mt-auto">
           <div className="flex items-center gap-1">
@@ -91,6 +99,7 @@ export default function CollectionCard({ entry }: CollectionCardProps) {
           <select
             value={entry.condition}
             onChange={(e) => setCondition(entry.id, e.target.value as DbEntry['condition'])}
+            title="Card condition"
             className="bg-slate-700 border border-slate-600 text-slate-200 text-xs rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-slate-500"
           >
             {CONDITIONS.map((c) => (

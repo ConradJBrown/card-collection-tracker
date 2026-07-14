@@ -12,6 +12,10 @@ interface CloudCollectionRow {
   set_name: string | null;
   rarity: string | null;
   description: string | null;
+  price_low: number | null;
+  price_mid: number | null;
+  price_high: number | null;
+  estimated_value: number | null;
   quantity: number;
   condition: DbEntry['condition'];
   added_at: string;
@@ -29,6 +33,10 @@ const COLLECTION_COLUMNS = [
   'set_name',
   'rarity',
   'description',
+  'price_low',
+  'price_mid',
+  'price_high',
+  'estimated_value',
   'quantity',
   'condition',
   'added_at',
@@ -47,6 +55,10 @@ function toCloudRow(userId: string, entry: DbEntry): CloudCollectionRow {
     set_name: entry.set ?? null,
     rarity: entry.rarity ?? null,
     description: entry.description ?? null,
+    price_low: entry.priceLow ?? null,
+    price_mid: entry.priceMid ?? entry.estimatedPrice ?? null,
+    price_high: entry.priceHigh ?? null,
+    estimated_value: entry.estimatedPrice ?? entry.priceMid ?? null,
     quantity: entry.quantity,
     condition: entry.condition,
     added_at: entry.addedAt,
@@ -65,6 +77,10 @@ function toDbEntry(row: CloudCollectionRow): DbEntry {
     set: row.set_name ?? undefined,
     rarity: row.rarity ?? undefined,
     description: row.description ?? undefined,
+    priceLow: row.price_low ?? undefined,
+    priceMid: row.price_mid ?? row.estimated_value ?? undefined,
+    priceHigh: row.price_high ?? undefined,
+    estimatedPrice: row.estimated_value ?? row.price_mid ?? undefined,
     quantity: row.quantity,
     condition: row.condition,
     addedAt: row.added_at,

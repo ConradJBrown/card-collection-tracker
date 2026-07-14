@@ -5,6 +5,8 @@ import { GameType } from '../types';
 import { db, DbEntry } from '../services/db';
 import { useCollectionStore, SortBy } from '../store/collectionStore';
 import CollectionCard from './CollectionCard';
+import { formatCurrencyPrice } from '../services/priceUtils';
+import { usePriceDisplayStore } from '../store/priceDisplayStore';
 
 interface CollectionViewProps {
   game: GameType;
@@ -29,6 +31,7 @@ const SORT_OPTIONS: { label: string; value: SortBy }[] = [
 ];
 
 export default function CollectionView({ game }: CollectionViewProps) {
+  const currency = usePriceDisplayStore((s) => s.currency);
   const searchTerm = useCollectionStore((s) => s.searchTerm);
   const sortBy = useCollectionStore((s) => s.sortBy);
   const sortDir = useCollectionStore((s) => s.sortDir);
@@ -88,6 +91,11 @@ export default function CollectionView({ game }: CollectionViewProps) {
     [base]
   );
 
+  const estimatedCollectionValue = useMemo(
+    () => base.reduce((sum: number, entry: DbEntry) => sum + (entry.estimatedPrice ?? entry.priceMid ?? 0) * entry.quantity, 0),
+    [base]
+  );
+
   // Virtual scroll
   const parentRef = useRef<HTMLDivElement>(null);
   const rowVirtualizer = useVirtualizer({
@@ -109,6 +117,11 @@ export default function CollectionView({ game }: CollectionViewProps) {
         <span className="bg-slate-700 text-slate-300 text-xs font-medium px-2.5 py-0.5 rounded-full">
           {base.length} unique · {totalCards} total
         </span>
+        {estimatedCollectionValue > 0 && (
+          <span className="bg-emerald-900/40 text-emerald-200 text-xs font-medium px-2.5 py-0.5 rounded-full">
+            Est. {formatCurrencyPrice(estimatedCollectionValue, currency)}
+          </span>
+        )}
       </div>
 
       {/* Filter / Sort bar */}
@@ -124,6 +137,7 @@ export default function CollectionView({ game }: CollectionViewProps) {
         <select
           value={filterType}
           onChange={(e) => setFilterType(e.target.value)}
+          title="Filter by card type"
           className="bg-slate-800 border border-slate-600 rounded-md px-2 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-slate-400"
         >
           <option value="">All types</option>
@@ -133,6 +147,7 @@ export default function CollectionView({ game }: CollectionViewProps) {
         <select
           value={filterSet}
           onChange={(e) => setFilterSet(e.target.value)}
+          title="Filter by set"
           className="bg-slate-800 border border-slate-600 rounded-md px-2 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-slate-400"
         >
           <option value="">All sets</option>
@@ -142,6 +157,7 @@ export default function CollectionView({ game }: CollectionViewProps) {
         <select
           value={filterRarity}
           onChange={(e) => setFilterRarity(e.target.value)}
+          title="Filter by rarity"
           className="bg-slate-800 border border-slate-600 rounded-md px-2 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-slate-400"
         >
           <option value="">All rarities</option>
@@ -155,6 +171,7 @@ export default function CollectionView({ game }: CollectionViewProps) {
             setSortBy(field);
             setSortDir(dir);
           }}
+          title="Sort collection"
           className="bg-slate-800 border border-slate-600 rounded-md px-2 py-1.5 text-sm text-slate-300 focus:outline-none focus:border-slate-400"
         >
           {SORT_OPTIONS.map(({ label, value }) => (

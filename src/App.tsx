@@ -35,6 +35,8 @@ import {
   getCollectionBackupSummary,
 } from './services/localCollectionBackup';
 import { migrateLegacyCollection } from './services/legacyCollection';
+import { CurrencyCode } from './services/priceUtils';
+import { usePriceDisplayStore } from './store/priceDisplayStore';
 
 type ActiveTab = 'search' | 'collection' | 'binders';
 type SyncStatus = 'idle' | 'syncing' | 'error';
@@ -58,6 +60,8 @@ function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : 'Something went wrong.';
 }
 
+const CURRENCY_OPTIONS: CurrencyCode[] = ['USD', 'EUR', 'GBP', 'CAD', 'AUD', 'JPY'];
+
 export default function App() {
   const [activeGame, setActiveGame] = useState<GameType>('yugioh');
   const [activeTab, setActiveTab] = useState<ActiveTab>('search');
@@ -73,6 +77,8 @@ export default function App() {
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [guestBackupCount, setGuestBackupCount] = useState(0);
   const [guestBackupUpdatedAt, setGuestBackupUpdatedAt] = useState<string | null>(null);
+  const currency = usePriceDisplayStore((s) => s.currency);
+  const setCurrency = usePriceDisplayStore((s) => s.setCurrency);
 
   const refreshBackupSummary = useCallback(async () => {
     const backupSummary = await getCollectionBackupSummary();
@@ -409,7 +415,8 @@ export default function App() {
       />
 
       <div className="mb-6 border-b border-slate-700">
-        <nav className="flex gap-6">
+        <div className="flex items-end justify-between gap-4">
+          <nav className="flex gap-6" aria-label="Primary views">
           {(['search', 'collection'] as ActiveTab[]).map((tab) => (
             <button
               key={tab}
@@ -431,7 +438,24 @@ export default function App() {
           >
             Binders
           </button>
-        </nav>
+          </nav>
+
+          <label className="flex items-center gap-2 pb-2 text-xs text-slate-400">
+            Currency
+            <select
+              value={currency}
+              onChange={(event) => setCurrency(event.target.value as CurrencyCode)}
+              title="Select price display currency"
+              className="bg-slate-800 border border-slate-600 rounded-md px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-slate-400"
+            >
+              {CURRENCY_OPTIONS.map((code) => (
+                <option key={code} value={code}>
+                  {code}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
 
       {activeTab === 'search' ? (

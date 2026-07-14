@@ -44,6 +44,10 @@ create table if not exists public.collection_entries (
   set_name text,
   rarity text,
   description text,
+  price_low numeric(10, 2),
+  price_mid numeric(10, 2),
+  price_high numeric(10, 2),
+  estimated_value numeric(10, 2),
   quantity integer not null check (quantity > 0),
   condition text not null check (
     condition in (

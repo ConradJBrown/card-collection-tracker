@@ -1,4 +1,5 @@
 import { CardResult } from '../types';
+import { estimateMarketPrice } from './priceUtils';
 
 interface BulkDataItem {
   id: string;
@@ -23,6 +24,11 @@ interface ScryfallCard {
   card_faces?: { image_uris?: { normal?: string } }[];
   type_line?: string;
   oracle_text?: string;
+  prices?: {
+    usd?: string | null;
+    usd_foil?: string | null;
+    usd_etched?: string | null;
+  };
 }
 
 interface DatabaseMetadata {
@@ -161,6 +167,11 @@ class MTGDatabase {
           game: 'mtg',
           type: card.type_line,
           description: card.oracle_text,
+          estimatedPrice: estimateMarketPrice([
+            card.prices?.usd,
+            card.prices?.usd_foil,
+            card.prices?.usd_etched,
+          ]),
         };
       });
 
