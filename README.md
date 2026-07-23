@@ -220,6 +220,37 @@ You can deploy quickly via:
 * [Netlify](https://netlify.com/)
 * [GitHub Pages](https://pages.github.com/) using `vite-plugin-gh-pages`
 
+### PM2 (home network / self-hosted)
+
+For internal hosting on your home network, this repo includes a PM2 workflow that runs the built app with `vite preview` bound to all interfaces.
+
+1. Install PM2 (once):
+
+   ```bash
+   npm install -g pm2
+   ```
+
+2. Build and start with PM2:
+
+   ```bash
+   npm run pm2:start
+   ```
+
+3. Open from any device on your LAN:
+
+   ```text
+   http://<your-host-machine-ip>:4173
+   ```
+
+Useful commands:
+
+```bash
+npm run pm2:restart
+npm run pm2:stop
+npm run pm2:delete
+pm2 logs card-collection-tracker
+```
+
 ---
 
 ## 🤝 Contributing
