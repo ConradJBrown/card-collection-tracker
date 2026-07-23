@@ -9,7 +9,8 @@
     "preview": "vite preview",
     "preview:host": "vite preview --host 0.0.0.0 --port 4173 --strictPort",
     "pm2:start": "npm run build && pm2 start ecosystem.config.cjs --env production",
-    "pm2:restart": "npm run build && pm2 restart card-collection-tracker --update-env",
+    "pm2:restart": "pm2 restart card-collection-tracker",
+    "pm2:reload": "npm run build && pm2 reload card-collection-tracker --update-env",
     "pm2:stop": "pm2 stop card-collection-tracker",
     "pm2:delete": "pm2 delete card-collection-tracker",
     "lint": "eslint src --ext .ts,.tsx"
