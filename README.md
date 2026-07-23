@@ -233,6 +233,7 @@ For internal hosting on your home network, this repo includes a PM2 workflow tha
 2. Build and start with PM2:
 
    ```bash
+   npm run pm2:rebuild
    npm run pm2:start
    ```
 
@@ -246,13 +247,14 @@ Useful commands:
 
 ```bash
 npm run pm2:restart
+npm run pm2:rebuild
 npm run pm2:reload
 npm run pm2:stop
 npm run pm2:delete
 pm2 logs card-collection-tracker
 ```
 
-> ⚠️ Security note: `vite preview` is intended for internal/testing use. It does not provide production hardening (for example rate limiting, HTTPS enforcement, or hardened error handling). Binding to `0.0.0.0` exposes the app on all host interfaces, so keep this behind your home network/firewall and do not use it as an internet-facing production server. For longer-term self-hosting, place it behind a reverse proxy such as Nginx.
+> ⚠️ Security note: `vite preview` is intended for internal/testing use. It does not provide production hardening (for example rate limiting, HTTPS enforcement, or hardened error handling), and this app does not include LAN access authentication. Binding to `0.0.0.0` exposes the app on all host interfaces, so keep this behind your home network/firewall and do not use it as an internet-facing production server. For longer-term self-hosting, place it behind a reverse proxy such as Nginx.
 
 ---
 
