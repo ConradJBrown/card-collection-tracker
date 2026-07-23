@@ -233,7 +233,7 @@ For internal hosting on your home network, this repo includes a PM2 workflow tha
 2. Build and start with PM2:
 
    ```bash
-   npm run pm2:rebuild
+   npm run pm2:build
    npm run pm2:start
    ```
 
@@ -247,7 +247,6 @@ Useful commands:
 
 ```bash
 npm run pm2:restart
-npm run pm2:rebuild
 npm run pm2:reload
 npm run pm2:stop
 npm run pm2:delete
