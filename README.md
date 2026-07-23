@@ -252,6 +252,8 @@ npm run pm2:delete
 pm2 logs card-collection-tracker
 ```
 
+> ⚠️ Security note: `vite preview` is intended for internal/testing use. Binding to `0.0.0.0` exposes the app on all host interfaces, so keep this behind your home network/firewall and do not use it as an internet-facing production server.
+
 ---
 
 ## 🤝 Contributing
