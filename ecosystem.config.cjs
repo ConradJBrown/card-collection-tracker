@@ -3,8 +3,8 @@ module.exports = {
     {
       name: 'card-collection-tracker',
       cwd: __dirname,
-      script: 'npx',
-      args: 'vite preview --host 0.0.0.0 --port 4173 --strictPort',
+      script: 'npm',
+      args: 'run preview:host',
       autorestart: true,
       watch: false,
       env: {
