@@ -135,8 +135,8 @@ src/
 * [x] Add a Supabase-ready authentication and sync layer
 * [x] Support multiple devices per user through cloud sync
 * [x] Preserve guest collections for post-login import
-* [ ] Add organization/admin workflows for company installs
-* [ ] Import/export JSON data
+* [x] Add organization/admin workflows for company installs
+* [x] Import/export JSON data
 
 ### 🔮 Future Enhancements
 

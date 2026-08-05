@@ -131,3 +131,34 @@ create policy "Users can manage their own binder entries"
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- ── Admin / Owner policies ────────────────────────────────────────────────────
+
+-- Helper: returns true if the current user has owner or admin role
+create or replace function public.is_admin_or_owner()
+returns boolean
+language sql
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.profiles
+    where id = auth.uid()
+      and default_role in ('owner', 'admin')
+  );
+$$;
+
+-- Admins and owners can view all profiles (needed for the admin panel user list)
+drop policy if exists "Admins can view all profiles" on public.profiles;
+create policy "Admins can view all profiles"
+  on public.profiles
+  for select
+  using (public.is_admin_or_owner());
+
+-- Admins and owners can update any profile's role (e.g. to promote/demote users)
+drop policy if exists "Admins can update any profile" on public.profiles;
+create policy "Admins can update any profile"
+  on public.profiles
+  for update
+  using (public.is_admin_or_owner());
