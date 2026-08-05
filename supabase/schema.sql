@@ -131,3 +131,58 @@ create policy "Users can manage their own binder entries"
   for all
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- ── Admin / Owner policies ────────────────────────────────────────────────────
+
+-- New users should not be owners by default; bootstrap an initial owner explicitly.
+alter table public.profiles
+  alter column default_role set default 'member';
+
+-- Helper: returns true if the current user has owner or admin role
+create or replace function public.is_admin_or_owner()
+returns boolean
+language sql
+stable
+security definer
+set search_path = public
+as $$
+  select exists (
+    select 1
+    from public.profiles
+    where id = auth.uid()
+      and default_role in ('owner', 'admin')
+  );
+$$;
+-- Prevent role self-promotion via the "Users can update their own profile" policy.
+create or replace function public.prevent_profile_role_escalation()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.default_role is distinct from old.default_role and not public.is_admin_or_owner() then
+    raise exception 'Only admins/owners can change user roles';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists prevent_profile_role_escalation on public.profiles;
+create trigger prevent_profile_role_escalation
+  before update on public.profiles
+  for each row execute function public.prevent_profile_role_escalation();
+
+-- Admins and owners can view all profiles (needed for the admin panel user list)
+drop policy if exists "Admins can view all profiles" on public.profiles;
+create policy "Admins can view all profiles"
+  on public.profiles
+  for select
+  using (public.is_admin_or_owner());
+-- Admins and owners can update any profile's role (e.g. to promote/demote users)
+drop policy if exists "Admins can update any profile" on public.profiles;
+create policy "Admins can update any profile"
+  on public.profiles
+  for update
+  using (public.is_admin_or_owner())
+  with check (public.is_admin_or_owner());

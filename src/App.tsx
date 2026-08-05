@@ -6,6 +6,8 @@ import CollectionView from './components/CollectionView';
 import BinderList from './components/BinderList';
 import AddToBinderModal from './components/AddToBinderModal';
 import AuthPanel from './components/AuthPanel';
+import AdminPanel from './components/AdminPanel';
+import CollectionImportExport from './components/CollectionImportExport';
 import { appConfig, isSupabaseConfigured } from './config/env';
 import { AuthMode, authProvider, AppSession } from './services/authProvider';
 import {
@@ -413,6 +415,12 @@ export default function App() {
         onSyncNow={() => { void syncCloudCollection(false); }}
         onImportLocalData={() => { void handleImportLocalData(); }}
       />
+
+      {appConfig.deploymentMode === 'self-hosted' && session && (
+        <AdminPanel />
+      )}
+
+      <CollectionImportExport />
 
       <div className="mb-6 border-b border-slate-700">
         <div className="flex items-end justify-between gap-4">
