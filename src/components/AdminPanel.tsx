@@ -28,8 +28,16 @@ export default function AdminPanel() {
     setLoading(true);
     setError(null);
     try {
-      const [profile, allUsers] = await Promise.all([getMyProfile(), listAllUsers()]);
+      const profile = await getMyProfile();
       setMyProfile(profile);
+
+      const isAdminOrOwner = profile?.role === 'owner' || profile?.role === 'admin';
+      if (!isAdminOrOwner) {
+        setUsers([]);
+        return;
+      }
+
+      const allUsers = await listAllUsers();
       setUsers(allUsers);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load admin data.');
