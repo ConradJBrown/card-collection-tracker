@@ -1,4 +1,9 @@
-import { useRef, useState } from 'react';import { exportCollectionToJson, importCollectionFromJson, ImportResult } from '../services/collectionJson';
+import { type ChangeEvent, useRef, useState } from 'react';
+import {
+  exportCollectionToJson,
+  importCollectionFromJson,
+  type ImportResult,
+} from '../services/collectionJson';
 
 export default function CollectionImportExport() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -20,8 +25,8 @@ export default function CollectionImportExport() {
     }
   };
 
-  const handleImport = async (event: { target: HTMLInputElement }) => {
-    const file = event.target.files?.[0];
+  const handleImport = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.currentTarget.files?.[0];
     if (!file) return;
 
     setImporting(true);
