@@ -161,4 +161,5 @@ drop policy if exists "Admins can update any profile" on public.profiles;
 create policy "Admins can update any profile"
   on public.profiles
   for update
-  using (public.is_admin_or_owner());
+  using (public.is_admin_or_owner())
+  with check (public.is_admin_or_owner());
