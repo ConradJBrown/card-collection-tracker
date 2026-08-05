@@ -33,8 +33,9 @@ function isValidEntry(e: unknown): e is DbEntry {
     isString(obj['name']) &&
     isString(obj['imageUrl']) &&
     typeof obj['quantity'] === 'number' &&
+    Number.isFinite(obj['quantity']) &&
+    Number.isInteger(obj['quantity']) &&
     obj['quantity'] > 0 &&
-    VALID_CONDITIONS.has(obj['condition'] as string) &&
     isString(obj['addedAt'])
   );
 }
