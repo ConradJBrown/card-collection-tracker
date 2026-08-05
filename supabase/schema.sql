@@ -153,6 +153,25 @@ as $$
       and default_role in ('owner', 'admin')
   );
 $$;
+-- Prevent role self-promotion via the "Users can update their own profile" policy.
+create or replace function public.prevent_profile_role_escalation()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.default_role is distinct from old.default_role and not public.is_admin_or_owner() then
+    raise exception 'Only admins/owners can change user roles';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists prevent_profile_role_escalation on public.profiles;
+create trigger prevent_profile_role_escalation
+  before update on public.profiles
+  for each row execute function public.prevent_profile_role_escalation();
 
 -- Admins and owners can view all profiles (needed for the admin panel user list)
 drop policy if exists "Admins can view all profiles" on public.profiles;
@@ -160,7 +179,6 @@ create policy "Admins can view all profiles"
   on public.profiles
   for select
   using (public.is_admin_or_owner());
-
 -- Admins and owners can update any profile's role (e.g. to promote/demote users)
 drop policy if exists "Admins can update any profile" on public.profiles;
 create policy "Admins can update any profile"
