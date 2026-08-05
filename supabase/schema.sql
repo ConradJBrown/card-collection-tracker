@@ -134,10 +134,15 @@ create policy "Users can manage their own binder entries"
 
 -- ── Admin / Owner policies ────────────────────────────────────────────────────
 
+-- New users should not be owners by default; bootstrap an initial owner explicitly.
+alter table public.profiles
+  alter column default_role set default 'member';
+
 -- Helper: returns true if the current user has owner or admin role
 create or replace function public.is_admin_or_owner()
 returns boolean
 language sql
+stable
 security definer
 set search_path = public
 as $$
