@@ -10,14 +10,6 @@ export interface CollectionExport {
 }
 
 const VALID_GAMES = new Set(['yugioh', 'mtg', 'pokemon']);
-const VALID_CONDITIONS = new Set([
-  'Mint',
-  'Near Mint',
-  'Lightly Played',
-  'Moderately Played',
-  'Heavily Played',
-  'Damaged',
-]);
 
 function isString(v: unknown): v is string {
   return typeof v === 'string';
