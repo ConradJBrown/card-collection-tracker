@@ -1,4 +1,4 @@
-import { DbEntry, removeCard, incrementQty, decrementQty, setCondition } from '../services/db';
+import { CARD_CONDITIONS, DbEntry, removeCard, incrementQty, decrementQty, setCondition } from '../services/db';
 import { useBinderStore } from '../store/binderStore';
 import { formatCurrencyPrice } from '../services/priceUtils';
 import { usePriceDisplayStore } from '../store/priceDisplayStore';
@@ -6,15 +6,6 @@ import { usePriceDisplayStore } from '../store/priceDisplayStore';
 interface CollectionCardProps {
   entry: DbEntry;
 }
-
-const CONDITIONS: DbEntry['condition'][] = [
-  'Mint',
-  'Near Mint',
-  'Lightly Played',
-  'Moderately Played',
-  'Heavily Played',
-  'Damaged',
-];
 
 const GAME_ACCENT: Record<string, string> = {
   yugioh: 'border-amber-500',
@@ -102,7 +93,7 @@ export default function CollectionCard({ entry }: CollectionCardProps) {
             title="Card condition"
             className="bg-slate-700 border border-slate-600 text-slate-200 text-xs rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-slate-500"
           >
-            {CONDITIONS.map((c) => (
+            {CARD_CONDITIONS.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>

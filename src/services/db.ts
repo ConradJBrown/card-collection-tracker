@@ -20,6 +20,15 @@ export interface DbEntry {
   addedAt: string;
 }
 
+export const CARD_CONDITIONS: DbEntry['condition'][] = [
+  'Mint',
+  'Near Mint',
+  'Lightly Played',
+  'Moderately Played',
+  'Heavily Played',
+  'Damaged',
+];
+
 export interface CollectionSyncHandlers {
   onUpsert?: (entry: DbEntry) => Promise<void>;
   onDelete?: (id: string) => Promise<void>;
@@ -96,6 +105,45 @@ export async function replaceCollection(entries: DbEntry[]) {
 export async function bulkUpsertCollection(entries: DbEntry[]) {
   if (entries.length === 0) return;
   await db.collection.bulkPut(entries);
+}
+
+export async function bulkAddToCollection(entries: DbEntry[]) {
+  if (entries.length === 0) return;
+
+  const mergedEntries = new Map<string, DbEntry>();
+  for (const entry of entries) {
+    const existing = mergedEntries.get(entry.id);
+    if (existing) {
+      existing.quantity += entry.quantity;
+      continue;
+    }
+    mergedEntries.set(entry.id, { ...entry });
+  }
+
+  const ids = [...mergedEntries.keys()];
+
+  await db.transaction('rw', db.collection, async () => {
+    const currentEntries = await db.collection.bulkGet(ids);
+    const nextEntries = ids.map((id, index) => {
+      const incoming = mergedEntries.get(id)!;
+      const current = currentEntries[index];
+
+      if (!current) {
+        return incoming;
+      }
+
+      return {
+        ...current,
+        quantity: current.quantity + incoming.quantity,
+      };
+    });
+
+    await db.collection.bulkPut(nextEntries);
+  });
+
+  for (const id of ids) {
+    void syncEntry(id);
+  }
 }
 
 // ── CRUD helpers ──────────────────────────────────────────────────────────────
