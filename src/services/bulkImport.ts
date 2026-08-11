@@ -68,6 +68,10 @@ function toOptionalValue(value: string | undefined) {
   return trimmed ? trimmed : undefined;
 }
 
+function escapeQuotedSearchTerm(value: string) {
+  return value.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
 function isHeaderLine(line: string) {
   const tokens = line
     .split(/[,\t|]/)
@@ -243,7 +247,7 @@ async function fetchCandidates(game: GameType, name: string, set?: string): Prom
   if (game === 'yugioh') {
     results = await searchYugioh(name);
   } else if (game === 'mtg') {
-    results = await searchMtg(`!"${name.replace(/"/g, '\\"')}"`);
+    results = await searchMtg(`!"${escapeQuotedSearchTerm(name)}"`);
   } else {
     results = await searchPokemon(name);
   }
