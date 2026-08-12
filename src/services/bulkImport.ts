@@ -210,15 +210,19 @@ function parseFreeformLine(rawLine: string, lineNumber: number): BulkImportPrevi
 }
 
 export function parseBulkImportText(text: string): BulkImportPreviewRow[] {
+  let headerChecked = false;
+
   return text
     .split(/\r?\n/)
     .map((line, index) => ({ line: line.trim(), rawLine: line, lineNumber: index + 1 }))
     .filter(({ line }) => line.length > 0)
-    .filter(({ line, lineNumber }) => !(lineNumber === 1 && isHeaderLine(line)))
+    .filter(({ line }) => {
+      if (headerChecked) return true;
+      headerChecked = true;
+      return !isHeaderLine(line);
+    })
     .map(({ line, lineNumber }) => (
-      /[,\t|]/.test(line)
-        ? parseDelimitedLine(line, lineNumber)
-        : parseFreeformLine(line, lineNumber)
+      /[,\t|]/.test(line) ? parseDelimitedLine(line, lineNumber) : parseFreeformLine(line, lineNumber)
     ));
 }
 
