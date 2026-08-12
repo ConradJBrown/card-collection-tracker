@@ -87,7 +87,23 @@ function isHeaderLine(line: string) {
 
 function parseCondition(parts: string[]) {
   const lastPart = parts[parts.length - 1]?.trim();
-  if (!lastPart || !isCondition(lastPart)) {
+  if (!lastPart) {
+    return {
+      condition: DEFAULT_CONDITION,
+      remaining: parts,
+    };
+  }
+
+  if (isCondition(lastPart)) {
+    return {
+      condition: lastPart,
+      remaining: parts.slice(0, -1),
+    };
+  }
+
+  const normalized = normalizeValue(lastPart);
+  const canonical = CARD_CONDITIONS.find((condition) => normalizeValue(condition) === normalized);
+  if (!canonical) {
     return {
       condition: DEFAULT_CONDITION,
       remaining: parts,
@@ -95,7 +111,7 @@ function parseCondition(parts: string[]) {
   }
 
   return {
-    condition: lastPart,
+    condition: canonical,
     remaining: parts.slice(0, -1),
   };
 }
