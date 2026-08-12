@@ -330,16 +330,17 @@ export default function CollectionImportExport({ game }: CollectionImportExportP
                           {row.set && <p className="mt-1">Requested set: {row.set}</p>}
                           {row.warning && <p className="mt-1">{row.warning}</p>}
                         </div>
-                        <select
-                          value={bulkSelections[row.lineNumber] ?? ''}
-                          onChange={(event) => {
-                            setBulkSelections((current) => ({
-                              ...current,
-                              [row.lineNumber]: event.target.value,
-                            }));
-                          }}
-                          className="min-w-60 rounded-md border border-slate-600 bg-slate-950 px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-500"
-                        >
+<select
+  value={bulkSelections[row.lineNumber] ?? ''}
+  onChange={(event) => {
+    setBulkSelections((current) => ({
+      ...current,
+      [row.lineNumber]: event.target.value,
+    }));
+  }}
+  aria-label={`Choose a card match for line ${row.lineNumber}`}
+  className="min-w-60 rounded-md border border-slate-600 bg-slate-950 px-2 py-1 text-xs text-slate-100 focus:outline-none focus:ring-1 focus:ring-slate-500"
+>
                           <option value="">Choose a card</option>
                           {row.candidates.map((candidate) => (
                             <option key={`${candidate.game}-${candidate.id}`} value={candidate.id}>
