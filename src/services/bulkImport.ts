@@ -122,7 +122,7 @@ function parseDelimitedLine(rawLine: string, lineNumber: number): BulkImportPrev
     : rawLine.includes('\t')
       ? '\t'
       : ',';
-  const parts = rawLine.split(separator).map((part) => part.trim()).filter(Boolean);
+const parts = rawLine.split(separator).map((part) => part.trim());
 
   if (parts.length === 0) {
     return {
