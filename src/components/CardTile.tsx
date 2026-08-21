@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { CardResult } from '../types';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, addOrIncrementCard } from '../services/db';
@@ -24,8 +25,21 @@ export default function CardTile({ card }: CardTileProps) {
   const key = `${card.game}-${card.id}`;
   const inCollection = useLiveQuery(() => db.collection.get(key).then(Boolean), [key], false);
   const currency = usePriceDisplayStore((s) => s.currency);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = (msg: string) => {
+    if (toastTimerRef.current !== null) clearTimeout(toastTimerRef.current);
+    setToast(msg);
+    toastTimerRef.current = setTimeout(() => setToast(null), 2000);
+  };
+
+  useEffect(() => () => {
+    if (toastTimerRef.current !== null) clearTimeout(toastTimerRef.current);
+  }, []);
 
   const handleAdd = () => {
+    const wasInCollection = inCollection;
     addOrIncrementCard({
       id: key,
       cardId: card.id,
@@ -38,10 +52,16 @@ export default function CardTile({ card }: CardTileProps) {
       description: card.description,
       estimatedPrice: card.estimatedPrice ?? card.priceMid,
     });
+    showToast(wasInCollection ? '+1 added to collection!' : 'Added to collection!');
   };
 
   return (
     <div className="bg-slate-800 rounded-lg shadow-md overflow-hidden flex flex-col hover:ring-2 hover:ring-slate-600 transition-all duration-150">
+      {toast && (
+        <div className="bg-emerald-800 text-emerald-100 text-xs text-center px-2 py-1">
+          {toast}
+        </div>
+      )}
       <div className="relative aspect-[3/4] bg-slate-700 overflow-hidden">
         {card.imageUrl ? (
           <img
