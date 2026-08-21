@@ -101,8 +101,9 @@ export default function CollectionView({ game }: CollectionViewProps) {
   const rowVirtualizer = useVirtualizer({
     count: entries.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 128, // approximate row height in px
+    estimateSize: () => 140, // approximate row height in px (includes 12px bottom padding)
     overscan: 5,
+    measureElement: (el) => el.getBoundingClientRect().height,
   });
 
   const hasActiveFilters = !!(searchTerm || filterType || filterSet || filterRarity);
@@ -224,6 +225,8 @@ export default function CollectionView({ game }: CollectionViewProps) {
               return (
                 <div
                   key={entry.id}
+                  data-index={virtualRow.index}
+                  ref={rowVirtualizer.measureElement}
                   style={{
                     position: 'absolute',
                     top: 0,
