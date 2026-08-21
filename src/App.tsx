@@ -420,7 +420,7 @@ export default function App() {
         <AdminPanel />
       )}
 
-      <CollectionImportExport />
+      <CollectionImportExport game={activeGame} />
 
       <div className="mb-6 border-b border-slate-700">
         <div className="flex items-end justify-between gap-4">

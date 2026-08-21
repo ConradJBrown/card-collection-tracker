@@ -28,6 +28,7 @@ function isValidEntry(e: unknown): e is DbEntry {
     Number.isFinite(obj['quantity']) &&
     Number.isInteger(obj['quantity']) &&
     obj['quantity'] > 0 &&
+    VALID_CONDITIONS.has(obj['condition'] as string) &&
     isString(obj['addedAt'])
   );
 }

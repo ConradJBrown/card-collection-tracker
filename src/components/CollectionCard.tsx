@@ -1,4 +1,5 @@
-import { DbEntry, removeCard, incrementQty, decrementQty, setCondition } from '../services/db';
+import { useEffect, useRef, useState } from 'react';
+import { CARD_CONDITIONS, DbEntry, removeCard, incrementQty, decrementQty, setCondition } from '../services/db';
 import { useBinderStore } from '../store/binderStore';
 import { formatCurrencyPrice } from '../services/priceUtils';
 import { usePriceDisplayStore } from '../store/priceDisplayStore';
@@ -6,15 +7,6 @@ import { usePriceDisplayStore } from '../store/priceDisplayStore';
 interface CollectionCardProps {
   entry: DbEntry;
 }
-
-const CONDITIONS: DbEntry['condition'][] = [
-  'Mint',
-  'Near Mint',
-  'Lightly Played',
-  'Moderately Played',
-  'Heavily Played',
-  'Damaged',
-];
 
 const GAME_ACCENT: Record<string, string> = {
   yugioh: 'border-amber-500',
@@ -26,6 +18,28 @@ export default function CollectionCard({ entry }: CollectionCardProps) {
   const accent = GAME_ACCENT[entry.game] ?? 'border-slate-600';
   const openAddToBinder = useBinderStore((s) => s.openAddToBinder);
   const currency = usePriceDisplayStore((s) => s.currency);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showToast = (msg: string) => {
+    if (toastTimerRef.current !== null) clearTimeout(toastTimerRef.current);
+    setToast(msg);
+    toastTimerRef.current = setTimeout(() => setToast(null), 2000);
+  };
+
+  useEffect(() => () => {
+    if (toastTimerRef.current !== null) clearTimeout(toastTimerRef.current);
+  }, []);
+
+  const handleIncrement = () => {
+    incrementQty(entry.id);
+    showToast('Quantity increased');
+  };
+
+  const handleDecrement = () => {
+    decrementQty(entry.id);
+    showToast('Quantity decreased');
+  };
 
   return (
     <div className={`bg-slate-800 rounded-lg shadow-md overflow-hidden flex gap-4 p-4 border-l-4 ${accent}`}>
@@ -80,7 +94,7 @@ export default function CollectionCard({ entry }: CollectionCardProps) {
         <div className="flex items-center gap-3 flex-wrap mt-auto">
           <div className="flex items-center gap-1">
             <button
-              onClick={() => decrementQty(entry.id)}
+              onClick={handleDecrement}
               className="w-7 h-7 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-base flex items-center justify-center transition-colors duration-150"
             >
               −
@@ -89,7 +103,7 @@ export default function CollectionCard({ entry }: CollectionCardProps) {
               {entry.quantity}
             </span>
             <button
-              onClick={() => incrementQty(entry.id)}
+              onClick={handleIncrement}
               className="w-7 h-7 rounded-md bg-slate-700 hover:bg-slate-600 text-slate-200 font-bold text-base flex items-center justify-center transition-colors duration-150"
             >
               +
@@ -102,12 +116,18 @@ export default function CollectionCard({ entry }: CollectionCardProps) {
             title="Card condition"
             className="bg-slate-700 border border-slate-600 text-slate-200 text-xs rounded-md px-2 py-1 focus:outline-none focus:ring-1 focus:ring-slate-500"
           >
-            {CONDITIONS.map((c) => (
+            {CARD_CONDITIONS.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
             ))}
           </select>
+
+          {toast && (
+            <span className="text-xs text-emerald-300">
+              {toast}
+            </span>
+          )}
         </div>
 
         <p className="text-xs text-slate-500">

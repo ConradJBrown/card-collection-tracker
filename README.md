@@ -12,6 +12,7 @@ Built with **React + TypeScript + Vite**, this project allows you to search card
 
 - 🔍 **Search Yu-Gi-Oh! cards** via YGOPRODeck API  
 - ➕ **Add cards** to your collection  
+- 📝 **Bulk import cards** from pasted text or CSV/TXT with a preview step
 - 💾 **Local persistence** using IndexedDB (via Localforage)  
 - 🧠 **State management** powered by Zustand  
 - 📱 Responsive grid-based UI with TailwindCSS  
