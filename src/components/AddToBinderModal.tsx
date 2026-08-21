@@ -14,12 +14,19 @@ export default function AddToBinderModal() {
   const [creatingNew, setCreatingNew] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [addQty, setSellQty] = useState(1);
 
   const binders = useLiveQuery(() => db.binders.orderBy('createdAt').reverse().toArray(), []);
+  const collectionEntry = useLiveQuery(
+    () => (targetEntryId ? db.collection.get(targetEntryId) : undefined),
+    [targetEntryId]
+  );
+  const maxQty = collectionEntry?.quantity ?? 1;
 
   useEffect(() => {
     if (!isOpen) return;
 
+    setSellQty(1);
     dialogRef.current?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -42,7 +49,7 @@ export default function AddToBinderModal() {
   const handleAddToBinder = async (binderId: string) => {
     try {
       setError(null);
-      await addCardToBinder(binderId, targetEntryId, 1);
+      await addCardToBinder(binderId, targetEntryId, addQty);
       showToast('Added to binder!');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add to binder.');
@@ -55,7 +62,7 @@ export default function AddToBinderModal() {
     try {
       setError(null);
       const binder = await createBinder(name);
-      await addCardToBinder(binder.id, targetEntryId, 1);
+      await addCardToBinder(binder.id, targetEntryId, addQty);
       setNewBinderName('');
       setCreatingNew(false);
       showToast(`Added to new binder "${binder.name}"!`);
@@ -94,6 +101,44 @@ export default function AddToBinderModal() {
         <p id="add-to-binder-description" className="text-sm text-slate-400">
           Choose a binder or create a new one for the selected card.
         </p>
+
+        {/* Quantity selector */}
+        <div className="flex items-center gap-3">
+          <label htmlFor="binder-sell-qty" className="text-sm text-slate-300 flex-shrink-0">
+            Quantity to add:
+          </label>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setSellQty((q) => Math.max(1, q - 1))}
+              disabled={addQty <= 1}
+              className="w-7 h-7 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 font-bold text-base flex items-center justify-center transition-colors"
+              aria-label="Decrease quantity"
+            >
+              −
+            </button>
+            <input
+              id="binder-sell-qty"
+              type="number"
+              min={1}
+              max={maxQty}
+              value={addQty}
+              onChange={(e) => {
+                const v = parseInt(e.target.value, 10);
+                if (!isNaN(v)) setSellQty(Math.min(maxQty, Math.max(1, v)));
+              }}
+              className="w-12 text-center bg-slate-700 border border-slate-600 rounded-md py-1 text-sm text-slate-100 focus:outline-none focus:border-slate-400"
+            />
+            <button
+              onClick={() => setSellQty((q) => Math.min(maxQty, q + 1))}
+              disabled={addQty >= maxQty}
+              className="w-7 h-7 rounded-md bg-slate-700 hover:bg-slate-600 disabled:opacity-40 text-slate-200 font-bold text-base flex items-center justify-center transition-colors"
+              aria-label="Increase quantity"
+            >
+              +
+            </button>
+          </div>
+          <span className="text-xs text-slate-500">/ {maxQty}</span>
+        </div>
 
         {toast && (
           <div className="bg-emerald-800 text-emerald-100 text-sm rounded-md px-3 py-2 text-center">
