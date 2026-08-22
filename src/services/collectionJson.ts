@@ -1,4 +1,4 @@
-import { db, DbEntry, bulkUpsertCollection } from './db';
+import { db, DbEntry, CARD_CONDITIONS, bulkUpsertCollection } from './db';
 import { Binder, BinderEntry } from '../types';
 
 export interface CollectionExport {
@@ -10,6 +10,7 @@ export interface CollectionExport {
 }
 
 const VALID_GAMES = new Set(['yugioh', 'mtg', 'pokemon']);
+const VALID_CONDITIONS = new Set<string>(CARD_CONDITIONS);
 
 function isString(v: unknown): v is string {
   return typeof v === 'string';
