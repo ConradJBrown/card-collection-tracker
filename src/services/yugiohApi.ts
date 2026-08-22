@@ -27,6 +27,16 @@ interface YgoResponse {
   data: YgoCard[];
 }
 
+function getCardPrice(card: YgoCard) {
+  return estimateMarketPrice([
+    card.card_prices?.[0]?.cardmarket_price,
+    card.card_prices?.[0]?.tcgplayer_price,
+    card.card_prices?.[0]?.ebay_price,
+    card.card_prices?.[0]?.amazon_price,
+    card.card_prices?.[0]?.coolstuffinc_price,
+  ]);
+}
+
 function getPrintingId(cardId: number, set: NonNullable<YgoCard['card_sets']>[number]) {
   const setKey = set.set_code ?? set.set_name;
   const rarityKey = set.set_rarity_code ?? set.set_rarity ?? 'default';
@@ -39,13 +49,7 @@ function getPrintingPrice(card: YgoCard, set: NonNullable<YgoCard['card_sets']>[
     return setSpecificPrice;
   }
 
-  return estimateMarketPrice([
-    card.card_prices?.[0]?.cardmarket_price,
-    card.card_prices?.[0]?.tcgplayer_price,
-    card.card_prices?.[0]?.ebay_price,
-    card.card_prices?.[0]?.amazon_price,
-    card.card_prices?.[0]?.coolstuffinc_price,
-  ]);
+  return getCardPrice(card);
 }
 
 export async function searchYugioh(name: string): Promise<CardResult[]> {
@@ -68,10 +72,7 @@ export async function searchYugioh(name: string): Promise<CardResult[]> {
             game: 'yugioh',
             type: card.type,
             description: card.desc,
-            estimatedPrice: getPrintingPrice(card, {
-              set_name: card.name,
-              set_price: undefined,
-            }),
+            estimatedPrice: getCardPrice(card),
           },
         ];
       }
