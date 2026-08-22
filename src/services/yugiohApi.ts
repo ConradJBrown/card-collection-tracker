@@ -11,6 +11,8 @@ interface YgoCard {
     set_name: string;
     set_code?: string;
     set_rarity?: string;
+    set_rarity_code?: string;
+    set_price?: string;
   }[];
   card_prices?: {
     cardmarket_price?: string;
@@ -23,6 +25,27 @@ interface YgoCard {
 
 interface YgoResponse {
   data: YgoCard[];
+}
+
+function getPrintingId(cardId: number, set: NonNullable<YgoCard['card_sets']>[number]) {
+  const setKey = set.set_code ?? set.set_name;
+  const rarityKey = set.set_rarity_code ?? set.set_rarity ?? 'default';
+  return `${cardId}-${setKey}-${rarityKey}`;
+}
+
+function getPrintingPrice(card: YgoCard, set: NonNullable<YgoCard['card_sets']>[number]) {
+  const setSpecificPrice = estimateMarketPrice([set.set_price]);
+  if (setSpecificPrice !== undefined) {
+    return setSpecificPrice;
+  }
+
+  return estimateMarketPrice([
+    card.card_prices?.[0]?.cardmarket_price,
+    card.card_prices?.[0]?.tcgplayer_price,
+    card.card_prices?.[0]?.ebay_price,
+    card.card_prices?.[0]?.amazon_price,
+    card.card_prices?.[0]?.coolstuffinc_price,
+  ]);
 }
 
 export async function searchYugioh(name: string): Promise<CardResult[]> {
@@ -45,19 +68,16 @@ export async function searchYugioh(name: string): Promise<CardResult[]> {
             game: 'yugioh',
             type: card.type,
             description: card.desc,
-            estimatedPrice: estimateMarketPrice([
-              card.card_prices?.[0]?.cardmarket_price,
-              card.card_prices?.[0]?.tcgplayer_price,
-              card.card_prices?.[0]?.ebay_price,
-              card.card_prices?.[0]?.amazon_price,
-              card.card_prices?.[0]?.coolstuffinc_price,
-            ]),
+            estimatedPrice: getPrintingPrice(card, {
+              set_name: card.name,
+              set_price: undefined,
+            }),
           },
         ];
       }
 
       return sets.map((set) => ({
-        id: `${card.id}-${set.set_code ?? set.set_name}`,
+        id: getPrintingId(card.id, set),
         name: card.name,
         imageUrl: card.card_images[0]?.image_url ?? '',
         game: 'yugioh',
@@ -65,13 +85,7 @@ export async function searchYugioh(name: string): Promise<CardResult[]> {
         description: card.desc,
         set: set.set_name,
         rarity: set.set_rarity,
-        estimatedPrice: estimateMarketPrice([
-          card.card_prices?.[0]?.cardmarket_price,
-          card.card_prices?.[0]?.tcgplayer_price,
-          card.card_prices?.[0]?.ebay_price,
-          card.card_prices?.[0]?.amazon_price,
-          card.card_prices?.[0]?.coolstuffinc_price,
-        ]),
+        estimatedPrice: getPrintingPrice(card, set),
       }));
     });
   } catch {
