@@ -1,5 +1,5 @@
 import Dexie, { type Table } from 'dexie';
-import { Binder, BinderEntry, GameType } from '../types';
+import { Binder, BinderEntry, Deck, DeckEntry, GameType } from '../types';
 
 export interface DbEntry {
   id: string; // "${game}-${cardId}"
@@ -39,6 +39,8 @@ class CollectionDb extends Dexie {
   collection!: Table<DbEntry, string>;
   binders!: Table<Binder, string>;
   binder_entries!: Table<BinderEntry, string>;
+  decks!: Table<Deck, string>;
+  deck_entries!: Table<DeckEntry, string>;
 
   constructor() {
     super('CardCollectionDb');
@@ -50,6 +52,13 @@ class CollectionDb extends Dexie {
       collection: 'id, game, [game+name], [game+addedAt], [game+quantity], [game+type], [game+set]',
       binders: 'id, createdAt',
       binder_entries: 'id, binderId, collectionEntryId, [binderId+collectionEntryId]',
+    });
+    this.version(3).stores({
+      collection: 'id, game, [game+name], [game+addedAt], [game+quantity], [game+type], [game+set]',
+      binders: 'id, createdAt',
+      binder_entries: 'id, binderId, collectionEntryId, [binderId+collectionEntryId]',
+      decks: 'id, game, createdAt',
+      deck_entries: 'id, deckId, collectionEntryId, [deckId+collectionEntryId]',
     });
   }
 }

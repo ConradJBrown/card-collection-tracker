@@ -16,7 +16,17 @@ Built with **React + TypeScript + Vite**, this project allows you to search card
 - 💾 **Local persistence** using IndexedDB (via Localforage)  
 - 🧠 **State management** powered by Zustand  
 - 📱 Responsive grid-based UI with TailwindCSS  
-- ⚙️ Fast, modern build with Vite  
+- ⚙️ Fast, modern build with Vite
+- 📂 **Binders** to organise and price cards you want to sell
+- 🃏 **Deck builder** — create decks per game, add/remove cards from your collection  
+
+---
+
+## 🔮 Future State
+
+- 🏆 **Format selection for decks** — choose a format (e.g. Standard, Legacy, Advanced) when creating a deck
+- ✅ **Deck legality checking** — validate deck contents against the rules of the chosen format (card counts, ban lists, set restrictions)
+- ☁️ **Deck cloud sync** — sync decks across devices alongside your collection
 
 ---
 
