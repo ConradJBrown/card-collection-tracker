@@ -30,6 +30,25 @@ export interface Binder {
   updatedAt: string;
 }
 
+export interface Deck {
+  id: string;
+  name: string;
+  description?: string;
+  game: GameType;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DeckEntry {
+  id: string;
+  deckId: string;
+  /** References a DbEntry.id in the collection */
+  collectionEntryId: string;
+  /** How many copies to include in the deck (≥ 1, ≤ collection qty) */
+  quantity: number;
+  addedAt: string;
+}
+
 export interface BinderEntry {
   id: string;
   binderId: string;

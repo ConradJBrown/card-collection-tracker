@@ -4,7 +4,9 @@ import Layout from './components/Layout';
 import CardSearch from './components/CardSearch';
 import CollectionView from './components/CollectionView';
 import BinderList from './components/BinderList';
+import DeckList from './components/DeckList';
 import AddToBinderModal from './components/AddToBinderModal';
+import AddToDeckModal from './components/AddToDeckModal';
 import AuthPanel from './components/AuthPanel';
 import AdminPanel from './components/AdminPanel';
 import CollectionImportExport from './components/CollectionImportExport';
@@ -40,7 +42,7 @@ import { migrateLegacyCollection } from './services/legacyCollection';
 import { CurrencyCode } from './services/priceUtils';
 import { usePriceDisplayStore } from './store/priceDisplayStore';
 
-type ActiveTab = 'search' | 'collection' | 'binders';
+type ActiveTab = 'search' | 'collection' | 'binders' | 'decks';
 type SyncStatus = 'idle' | 'syncing' | 'error';
 
 const TAB_STYLES: Record<GameType, { active: string; inactive: string }> = {
@@ -79,6 +81,7 @@ export default function App() {
   const [lastSyncedAt, setLastSyncedAt] = useState<string | null>(null);
   const [guestBackupCount, setGuestBackupCount] = useState(0);
   const [guestBackupUpdatedAt, setGuestBackupUpdatedAt] = useState<string | null>(null);
+  const [localModeDismissed, setLocalModeDismissed] = useState(false);
   const currency = usePriceDisplayStore((s) => s.currency);
   const setCurrency = usePriceDisplayStore((s) => s.setCurrency);
 
@@ -386,35 +389,51 @@ export default function App() {
 
   return (
     <Layout activeGame={activeGame} onGameChange={(g) => { setActiveGame(g); setActiveTab('search'); }}>
-      <AuthPanel
-        deploymentMode={appConfig.deploymentMode}
-        isConfigured={isSupabaseConfigured}
-        loading={authLoading}
-        mode={authMode}
-        email={authEmail}
-        password={authPassword}
-        sessionEmail={session?.user.email ?? null}
-        message={authMessage}
-        error={authError}
-        syncSummary={{
-          status: syncStatus,
-          message: syncMessage,
-          lastSyncedAt,
-          guestBackupCount,
-          guestBackupUpdatedAt,
-        }}
-        onModeChange={(mode) => {
-          setAuthMode(mode);
-          setAuthError(null);
-          setAuthMessage(null);
-        }}
-        onEmailChange={setAuthEmail}
-        onPasswordChange={setAuthPassword}
-        onSubmit={handleAuthSubmit}
-        onSignOut={handleSignOut}
-        onSyncNow={() => { void syncCloudCollection(false); }}
-        onImportLocalData={() => { void handleImportLocalData(); }}
-      />
+      {/* Local mode banner */}
+      {!isSupabaseConfigured && !localModeDismissed && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-amber-800 bg-amber-950/40 px-4 py-2 text-sm text-amber-200">
+          <span>⚠ Running in local-only mode — data is stored in this browser only.</span>
+          <button
+            onClick={() => setLocalModeDismissed(true)}
+            className="text-amber-400 hover:text-amber-200 text-lg leading-none flex-shrink-0"
+            aria-label="Dismiss local mode notice"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {isSupabaseConfigured && (
+        <AuthPanel
+          deploymentMode={appConfig.deploymentMode}
+          isConfigured={isSupabaseConfigured}
+          loading={authLoading}
+          mode={authMode}
+          email={authEmail}
+          password={authPassword}
+          sessionEmail={session?.user.email ?? null}
+          message={authMessage}
+          error={authError}
+          syncSummary={{
+            status: syncStatus,
+            message: syncMessage,
+            lastSyncedAt,
+            guestBackupCount,
+            guestBackupUpdatedAt,
+          }}
+          onModeChange={(mode) => {
+            setAuthMode(mode);
+            setAuthError(null);
+            setAuthMessage(null);
+          }}
+          onEmailChange={setAuthEmail}
+          onPasswordChange={setAuthPassword}
+          onSubmit={handleAuthSubmit}
+          onSignOut={handleSignOut}
+          onSyncNow={() => { void syncCloudCollection(false); }}
+          onImportLocalData={() => { void handleImportLocalData(); }}
+        />
+      )}
 
       {appConfig.deploymentMode === 'self-hosted' && session && (
         <AdminPanel />
@@ -446,6 +465,16 @@ export default function App() {
           >
             Binders
           </button>
+          <button
+            onClick={() => setActiveTab('decks')}
+            className={`pb-3 text-sm font-medium border-b-2 transition-colors duration-150 ${
+              activeTab === 'decks'
+                ? 'border-violet-400 text-violet-400'
+                : 'border-transparent text-slate-400 hover:text-violet-300'
+            }`}
+          >
+            Decks
+          </button>
           </nav>
 
           <label className="flex items-center gap-2 pb-2 text-xs text-slate-400">
@@ -470,11 +499,14 @@ export default function App() {
         <CardSearch key={activeGame} game={activeGame} />
       ) : activeTab === 'collection' ? (
         <CollectionView key={activeGame} game={activeGame} />
-      ) : (
+      ) : activeTab === 'binders' ? (
         <BinderList />
+      ) : (
+        <DeckList />
       )}
 
       <AddToBinderModal />
+      <AddToDeckModal />
     </Layout>
   );
 }

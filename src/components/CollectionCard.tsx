@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { CARD_CONDITIONS, DbEntry, removeCard, incrementQty, decrementQty, setCondition } from '../services/db';
 import { useBinderStore } from '../store/binderStore';
+import { useDeckStore } from '../store/deckStore';
 import { formatCurrencyPrice } from '../services/priceUtils';
 import { usePriceDisplayStore } from '../store/priceDisplayStore';
 
@@ -17,6 +18,7 @@ const GAME_ACCENT: Record<string, string> = {
 export default function CollectionCard({ entry }: CollectionCardProps) {
   const accent = GAME_ACCENT[entry.game] ?? 'border-slate-600';
   const openAddToBinder = useBinderStore((s) => s.openAddToBinder);
+  const openAddToDeck = useDeckStore((s) => s.openAddToDeck);
   const currency = usePriceDisplayStore((s) => s.currency);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -62,6 +64,13 @@ export default function CollectionCard({ entry }: CollectionCardProps) {
         <div className="flex items-start justify-between gap-2">
           <p className="font-semibold text-slate-100 leading-tight text-sm">{entry.name}</p>
           <div className="flex items-center gap-1 flex-shrink-0">
+            <button
+              onClick={() => openAddToDeck(entry.id)}
+              className="text-slate-500 hover:text-violet-400 transition-colors duration-150 text-sm leading-none px-1"
+              title="Add to deck"
+            >
+              🃏
+            </button>
             <button
               onClick={() => openAddToBinder(entry.id)}
               className="text-slate-500 hover:text-emerald-400 transition-colors duration-150 text-sm leading-none px-1"
